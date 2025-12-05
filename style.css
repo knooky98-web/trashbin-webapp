@@ -197,12 +197,12 @@ body {
 /* ====================================
    BOTTOM SHEET (내 주변 리스트)
 ==================================== */
-/* 👉 고정 px 대신 vh 기반으로 바꿔서, 작은 화면에서 안 잘리게 */
+/* 👉 vh 기반으로, 화면의 약 40%만 차지 */
 .bottom-sheet {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: -60vh; /* 기본 숨겨진 상태: 화면 높이의 60% 만큼 아래로 */
+  bottom: -40vh; /* 기본 숨겨진 상태: 화면 높이의 40% 만큼 아래로 */
   background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(16px);
   border-top-left-radius: 24px;
@@ -211,24 +211,33 @@ body {
   box-shadow: 0 -10px 30px rgba(15, 23, 42, 0.25);
   z-index: 9998;
   transition: bottom 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
-  max-height: 60vh; /* 시트 자체 최대 높이 */
+  max-height: 40vh; /* 시트 자체 최대 높이 (기존 60vh → 40vh) */
 }
 
 /* 시트 콘텐츠를 세로로 쌓고, 리스트가 남는 공간을 차지하도록 */
 #list-panel {
   height: auto;
-  max-height: 60vh;
+  max-height: 40vh;
   display: flex;
   flex-direction: column;
 }
 
+/* 드래그 핸들: 실제 드래그 영역을 넓게 */
 .sheet-handle {
+  width: 100%;
+  height: 24px;              /* 손가락으로 잡기 편한 높이 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+}
+
+.sheet-handle::before {
+  content: "";
   width: 40px;
   height: 4px;
   border-radius: 999px;
   background: #e5e7eb;
-  margin: 8px auto;
-  cursor: grab;
 }
 
 #list-panel h3 {
@@ -264,7 +273,7 @@ body {
 /* ====================================
    CARD LIST STYLE (내 주변 쓰레기통)
 ==================================== */
-/* 👉 고정 height → flex 기반으로 변경 */
+/* 👉 flex 기반: 시트 안에서 스크롤되도록 */
 #nearby-list {
   list-style: none;
   padding: 0;
@@ -308,14 +317,19 @@ body {
   grid-column: 1 / span 2;
 }
 
+/* 가장 가까운 아이템 카드 + 뱃지 */
 .nearest-item {
+  position: relative;
   background: linear-gradient(135deg, #eff6ff, #ecfdf5);
+  padding-top: 22px; /* 뱃지가 들어갈 공간 확보 */
 }
 
 /* 가까움 뱃지 */
 .badge-nearest {
+  position: absolute;
+  top: 6px;
+  left: 14px;
   display: inline-block;
-  margin-bottom: 4px;
   padding: 3px 9px;
   border-radius: 999px;
   font-size: 11px;
@@ -360,15 +374,15 @@ body {
   filter: brightness(1.05);
 }
 
-/* 키가 더 작은 기기에서(예: 640px 이하) 시트 높이 조금 더 줄이기 */
+/* 키가 더 작은 기기에서(예: 640px 이하) 시트 높이 조금 더 */
 @media (max-height: 640px) {
   .bottom-sheet {
-    bottom: -65vh;
-    max-height: 65vh;
+    bottom: -50vh;
+    max-height: 50vh;
   }
 
   #list-panel {
-    max-height: 65vh;
+    max-height: 50vh;
   }
 }
 
@@ -392,6 +406,7 @@ body {
   transition: transform 0.22s ease-out, opacity 0.22s ease-out;
   opacity: 0;
 }
+
 .mini-close-btn {
   border: none;
   background: transparent;
@@ -612,6 +627,7 @@ body {
   font-size: 22px;
   cursor: pointer;
 }
+
 
 /* 왼쪽 슬라이드 패널 */
 #side-panel {
@@ -1083,6 +1099,7 @@ body {
   cursor: pointer;
 }
 
+/* 자동완성 박스 강제 숨김 (현재 기능 OFF 상태) */
 #search-suggest {
   display: none !important;
 }
