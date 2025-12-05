@@ -1030,13 +1030,26 @@ function openListPanel() {
 
 /* ---------------------- DRAG SHEET ---------------------- */
 function enableDrag(panel, handle) {
-  if (!panel || !handle) return;
+  if (!panel) return;
 
   let startY = 0;
   let startBottom = 0;
   let dragging = false;
 
+  // 🔹 이 영역에서 시작된 터치는 드래그 무시하고 스크롤만 가능하게
+  function shouldIgnoreStart(target) {
+    if (!target) return false;
+    // 리스트 영역 안쪽이면 드래그 시작 안 함 (스크롤용)
+    if (target.closest && target.closest("#nearby-list")) {
+      return true;
+    }
+    return false;
+  }
+
   const onStart = (e) => {
+    const target = e.target;
+    if (shouldIgnoreStart(target)) return;
+
     dragging = true;
     startY = e.touches ? e.touches[0].clientY : e.clientY;
     startBottom = parseInt(window.getComputedStyle(panel).bottom, 10);
@@ -1044,25 +1057,31 @@ function enableDrag(panel, handle) {
 
   const onMove = (e) => {
     if (!dragging) return;
+
     const currentY = e.touches ? e.touches[0].clientY : e.clientY;
-    const diff = startY - currentY;
+    const diff = startY - currentY; // 위로 끌면 양수, 아래로 끌면 음수
     let newBottom = startBottom + diff;
 
-    const maxUp = 0;
-    const maxDown = getSheetClosedBottom(panel); // 🔥 완전 숨기지 않고 살짝 보이게
+    const maxUp = 0;                          // 완전히 열린 상태
+    const maxDown = getSheetClosedBottom(panel); // 살짝만 보이는 닫힌 상태
+
     if (newBottom > maxUp) newBottom = maxUp;
     if (newBottom < maxDown) newBottom = maxDown;
 
     panel.style.bottom = `${newBottom}px`;
+
+    // 모바일에서 화면 흔들리는 거 방지
+    if (e.cancelable) e.preventDefault();
   };
 
   const onEnd = () => {
     if (!dragging) return;
     dragging = false;
-    const currentBottom = parseInt(window.getComputedStyle(panel).bottom, 10);
-    const closedBottom = getSheetClosedBottom(panel); // 🔥 닫힌 위치
 
-    // 위로 많이 끌어올리면 0px(완전 열기), 아니면 살짝 보이는 닫힌 상태
+    const currentBottom = parseInt(window.getComputedStyle(panel).bottom, 10);
+    const closedBottom = getSheetClosedBottom(panel);
+
+    // 위로 많이 올렸으면 완전히 열기, 아니면 닫힌 상태로
     if (currentBottom > closedBottom / 2) {
       panel.style.bottom = "0px";
     } else {
@@ -1071,13 +1090,22 @@ function enableDrag(panel, handle) {
     refreshSheetOpenClass();
   };
 
-  handle.addEventListener("mousedown", onStart);
-  handle.addEventListener("touchstart", onStart);
+  // 🔹 손잡이에서도 드래그 시작 가능
+  if (handle) {
+    handle.addEventListener("mousedown", onStart);
+    handle.addEventListener("touchstart", onStart, { passive: false });
+  }
+
+  // 🔹 패널 전체에서도 드래그 시작 가능 (리스트 영역은 제외)
+  panel.addEventListener("mousedown", onStart);
+  panel.addEventListener("touchstart", onStart, { passive: false });
+
   window.addEventListener("mousemove", onMove);
-  window.addEventListener("touchmove", onMove);
+  window.addEventListener("touchmove", onMove, { passive: false });
   window.addEventListener("mouseup", onEnd);
   window.addEventListener("touchend", onEnd);
 }
+
 
 /* ---------------------- FLOATING LOCATE BTN ---------------------- */
 function createFloatingLocateButton() {
