@@ -1,27 +1,36 @@
-﻿/* ====================================
+/* ====================================
    GLOBAL
 ==================================== */
+/* 전체 화면을 앱처럼 한 화면에 딱 맞게 */
 html,
 body {
   margin: 0;
   padding: 0;
   height: 100%;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Noto Sans KR",
-    "Apple SD Gothic Neo", sans-serif;
-  background: #f3f4f6;
-  color: #111827;
-  overflow: hidden;
+}
+
+/* 모바일 브라우저 주소창 포함해서 꽉 채우기 */
+body {
+  min-height: 100dvh;        /* 최신 브라우저용 실제 화면 높이 */
+  background: #000;          /* 깔끔하게 */
+  overflow: hidden;          /* 기본 스크롤 금지 (지도 앱 느낌) */
+  overflow-x: hidden;        /* 가로 스크롤 완전 차단 */
+}
+
+/* 가로로 삐져나가는 것 방지 */
+* {
+  box-sizing: border-box;
 }
 
 /* ====================================
    MAP AREA
 ==================================== */
 #map {
-  position: absolute;
-  top: 60px;
-  bottom: 0;
+  position: fixed;
+  top: 0;
   left: 0;
   right: 0;
+  bottom: 0;
 }
 
 /* ====================================
@@ -188,11 +197,12 @@ body {
 /* ====================================
    BOTTOM SHEET (내 주변 리스트)
 ==================================== */
+/* 👉 고정 px 대신 vh 기반으로 바꿔서, 작은 화면에서 안 잘리게 */
 .bottom-sheet {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: -420px;
+  bottom: -60vh; /* 기본 숨겨진 상태: 화면 높이의 60% 만큼 아래로 */
   background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(16px);
   border-top-left-radius: 24px;
@@ -201,10 +211,15 @@ body {
   box-shadow: 0 -10px 30px rgba(15, 23, 42, 0.25);
   z-index: 9998;
   transition: bottom 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
+  max-height: 60vh; /* 시트 자체 최대 높이 */
 }
 
+/* 시트 콘텐츠를 세로로 쌓고, 리스트가 남는 공간을 차지하도록 */
 #list-panel {
-  height: 430px;
+  height: auto;
+  max-height: 60vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .sheet-handle {
@@ -249,11 +264,13 @@ body {
 /* ====================================
    CARD LIST STYLE (내 주변 쓰레기통)
 ==================================== */
+/* 👉 고정 height → flex 기반으로 변경 */
 #nearby-list {
   list-style: none;
   padding: 0;
   margin: 6px 0 0;
-  height: 280px;
+  flex: 1 1 auto;                     /* 남는 공간 모두 차지 */
+  min-height: 0;                      /* flex 컨테이너 안에서 스크롤 가능하게 */
   overflow-y: auto;
 }
 
@@ -341,6 +358,18 @@ body {
 .direction-btn:hover,
 .list-direction-btn:hover {
   filter: brightness(1.05);
+}
+
+/* 키가 더 작은 기기에서(예: 640px 이하) 시트 높이 조금 더 줄이기 */
+@media (max-height: 640px) {
+  .bottom-sheet {
+    bottom: -65vh;
+    max-height: 65vh;
+  }
+
+  #list-panel {
+    max-height: 65vh;
+  }
 }
 
 /* ====================================
