@@ -163,7 +163,7 @@ body {
 #floating-locate {
   position: fixed;
   right: 16px;
-  bottom: 120px;
+  bottom: 40px;
   width: 48px;
   height: 48px;
   border-radius: 999px;
@@ -441,7 +441,7 @@ body {
    나침반 (우측 상단 컨트롤)
 ==================================== */
 .compass-control {
-  margin-top: 8px;
+  margin-top: 50px;
   margin-right: 8px;
 }
 
@@ -466,7 +466,7 @@ body {
 ==================================== */
 .leaflet-control-zoom {
   position: absolute !important;
-  bottom: 200px;
+  bottom: 110px;
   right: 11px;
   left: auto !important;
   top: auto !important;
@@ -584,8 +584,8 @@ body {
 #settings-btn {
   position: absolute;
   z-index: 10000;
-  top: 90px;
-  left: 2%;
+  top: 110px;
+  left: 5%;
   transform: translateX(-50%);
   width: 38px;
   height: 38px;
@@ -1069,3 +1069,4 @@ body {
   font-size: 14px;
   cursor: pointer;
 }
+
