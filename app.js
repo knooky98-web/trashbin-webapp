@@ -1,4 +1,4 @@
-﻿/* =====================================================
+/* =====================================================
    쓰레기통 웹앱 app.js
    - 마커 하이라이트
    - 중복 제거
@@ -708,6 +708,7 @@ function openMiniInfo(bin) {
   el.innerHTML = `
     <div class="mini-header">
       <strong>${bin.name || "쓰레기통"}</strong>
+      <button class="mini-close-btn" type="button">✕</button>
     </div>
     <div class="mini-addr">${bin.addr || ""}</div>
     <div class="mini-meta">${meta}${distanceText}</div>
@@ -727,6 +728,16 @@ function openMiniInfo(bin) {
   el.querySelector(".kakao-route-btn").addEventListener("click", () => {
     openDirections(bin);
   });
+
+  // ✅ 닫기 버튼 동작
+  const closeBtn = el.querySelector(".mini-close-btn");
+  if (closeBtn) {
+    closeBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      el.classList.remove("active");
+      document.body.classList.remove("mini-open");
+    });
+  }
 
   el.classList.add("active");
   document.body.classList.add("mini-open");
@@ -864,67 +875,9 @@ function updateSearchSuggest(keyword) {
   const box = document.getElementById("search-suggest");
   if (!box) return;
 
-  const q = keyword.trim().toLowerCase();
-
-  if (!q || q.length < 2) {
-    box.style.display = "none";
-    box.innerHTML = "";
-    return;
-  }
-
-  const matches = BINS_SEOUL.filter((b) => {
-    const name = (b.name || "").toLowerCase();
-    const addr = (b.addr || "").toLowerCase();
-    const dist = (b.district || "").toLowerCase();
-    return name.includes(q) || addr.includes(q) || dist.includes(q);
-  }).slice(0, 10);
-
-  if (matches.length === 0) {
-    box.style.display = "none";
-    box.innerHTML = "";
-    return;
-  }
-
-  box.innerHTML =
-    "<ul>" +
-    matches
-      .map(
-        (b) => `
-      <li>
-        <strong>${b.name || "쓰레기통"}</strong>
-        <span>${b.addr || ""}</span>
-      </li>`
-      )
-      .join("") +
-    "</ul>";
-
-  box.style.display = "block";
-
-  const lis = box.querySelectorAll("li");
-  lis.forEach((li, idx) => {
-    const bin = matches[idx];
-
-    li.addEventListener("click", () => {
-      const input = document.getElementById("searchInput");
-      if (input) {
-        input.value = bin.addr || "";
-      }
-
-      map.setView([bin.lat, bin.lng], 17);
-      openMiniInfo(bin);
-      const m = markersById[bin.id];
-      if (m) highlightMarker(m);
-
-      // 🔥 자동완성에서 항목 클릭 시 → 리스트 패널 자동 열기 + 내 위치 기준 리스트 갱신
-      openListPanel();
-      if (userLat != null && userLng != null) {
-        updateNearbyBins(userLat, userLng);
-      }
-
-      box.style.display = "none";
-      box.innerHTML = "";
-    });
-  });
+  // 🔹 자동완성 기능 비활성화: 항상 숨기기
+  box.style.display = "none";
+  box.innerHTML = "";
 }
 
 /* ---------------------- 내 위치 ---------------------- */
@@ -937,10 +890,13 @@ function locateMe() {
     return;
   }
 
-  // 이미 watch 중이면 위치로 이동만
+  // 이미 watch 중이면 위치로 이동만 + 리스트 패널 열기
   if (geoWatchId !== null) {
     if (userLat != null && userLng != null) {
       map.setView([userLat, userLng], 16);
+      // 🔹 내 위치 버튼 다시 눌렀을 때도 리스트 패널 열어주기
+      openListPanel();
+      updateNearbyBins(userLat, userLng);
     }
     return;
   }
@@ -999,6 +955,9 @@ function locateMe() {
         map.setView([userLat, userLng], 16);
         hasInitialFix = true;
         hideLoading();
+
+        // 🔹 첫 위치를 잡았을 때 자동으로 리스트 패널 열기
+        openListPanel();
       }
 
       updateUserMarkerHeading();
@@ -1035,6 +994,12 @@ function locateMe() {
       timeout: 10000,
     }
   );
+}
+
+/* ---------------------- 바텀시트 닫힌 위치 계산 🔥 ---------------------- */
+function getSheetClosedBottom(panel) {
+  const peek = 36; // 위로 36px 정도만 보이게
+  return -(panel.offsetHeight - peek);
 }
 
 /* ---------------------- sheet-open 상태 갱신 ---------------------- */
@@ -1084,7 +1049,7 @@ function enableDrag(panel, handle) {
     let newBottom = startBottom + diff;
 
     const maxUp = 0;
-    const maxDown = -panel.offsetHeight;
+    const maxDown = getSheetClosedBottom(panel); // 🔥 완전 숨기지 않고 살짝 보이게
     if (newBottom > maxUp) newBottom = maxUp;
     if (newBottom < maxDown) newBottom = maxDown;
 
@@ -1095,10 +1060,13 @@ function enableDrag(panel, handle) {
     if (!dragging) return;
     dragging = false;
     const currentBottom = parseInt(window.getComputedStyle(panel).bottom, 10);
-    if (currentBottom > -panel.offsetHeight / 2) {
+    const closedBottom = getSheetClosedBottom(panel); // 🔥 닫힌 위치
+
+    // 위로 많이 끌어올리면 0px(완전 열기), 아니면 살짝 보이는 닫힌 상태
+    if (currentBottom > closedBottom / 2) {
       panel.style.bottom = "0px";
     } else {
-      panel.style.bottom = `-${panel.offsetHeight}px`;
+      panel.style.bottom = `${closedBottom}px`;
     }
     refreshSheetOpenClass();
   };
@@ -1139,6 +1107,12 @@ window.addEventListener("DOMContentLoaded", () => {
   const listPanel = document.getElementById("list-panel");
   enableDrag(listPanel, document.getElementById("list-handle"));
   createFloatingLocateButton();
+
+  // 🔥 처음에는 살짝만 보이도록 닫힌 상태로 세팅
+  if (listPanel) {
+    listPanel.style.bottom = `${getSheetClosedBottom(listPanel)}px`;
+    refreshSheetOpenClass();
+  }
 
   // ✅ 문의 위치 입력칸은 항상 사용자가 직접 수정 가능하도록
   const inquiryLocationInput = document.getElementById("inquiry-location");
@@ -1212,23 +1186,19 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-      /* ---------- 앱 공유 ---------- */
+  /* ---------- 앱 공유 ---------- */
   const shareBtn = document.getElementById("share-app-btn");
   if (shareBtn) {
     shareBtn.addEventListener("click", async () => {
-      // 테스트용 알림 (정상 동작 확인)
       alert("공유 버튼 눌림 ✅");
 
-      // 설정 패널 열려 있으면 닫기 (있을 때만)
       if (typeof closeSidePanel === "function") {
         closeSidePanel();
       }
 
-      // 지금 주소 그대로 공유
       const url = window.location.href;
       const isFile = window.location.protocol === "file:";
 
-      // 🔹 파일로 열었을 때(file://) → 그냥 주소만 보여주기
       if (isFile) {
         window.prompt(
           "아래 주소를 복사해서 친구에게 보내 주세요.",
@@ -1237,7 +1207,6 @@ window.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // 🔹 1) Web Share API 지원하는 환경이면 그걸 먼저 사용
       if (navigator.share) {
         try {
           await navigator.share({
@@ -1251,7 +1220,6 @@ window.addEventListener("DOMContentLoaded", () => {
         }
       }
 
-      // 🔹 2) 클립보드 복사 시도 (https/localhost에서만 됨)
       if (navigator.clipboard && navigator.clipboard.writeText) {
         try {
           await navigator.clipboard.writeText(url);
@@ -1266,7 +1234,6 @@ window.addEventListener("DOMContentLoaded", () => {
         }
       }
 
-      // 🔹 3) 마지막 fallback: 무조건 프롬프트
       window.prompt(
         "공유 기능을 지원하지 않는 환경이에요.\n아래 주소를 복사해 친구에게 보내 주세요.",
         url
@@ -1274,17 +1241,12 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-
   /* ---------- 앱 평가하기 ---------- */
   const rateBtn = document.getElementById("rate-app-btn");
   if (rateBtn) {
     rateBtn.addEventListener("click", () => {
-      // 설정 패널 닫기
       closeSidePanel();
-
-      // 🔹 나중에 실제 스토어/배포 주소로 변경하면 됨
       const reviewUrl = "https://google.com"; // 임시
-
       window.open(reviewUrl, "_blank");
     });
   }
@@ -1350,7 +1312,6 @@ window.addEventListener("DOMContentLoaded", () => {
       const locEl = document.getElementById("inquiry-location");
       if (locEl) locEl.value = "";
 
-      // 모달 잠깐 닫고 지도에서 핀 선택 유도
       if (inquiryBackdrop) inquiryBackdrop.classList.remove("open");
       if (inquiryModal) inquiryModal.classList.remove("open");
 
@@ -1384,10 +1345,8 @@ window.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // 🔹 lastClickedBinForInquiry에서 쓰레기통 정보 추출
       const bin = lastClickedBinForInquiry || {};
 
-      // 🔹 Google Sheets로 보낼 파라미터 조립
       const params = new URLSearchParams({
         type: sel?.value || "",
         title: finalTitle,
@@ -1409,7 +1368,6 @@ window.addEventListener("DOMContentLoaded", () => {
         if (text.trim() === "OK") {
           alert("문의가 정상적으로 접수되었습니다. 감사합니다!");
 
-          // 초기화
           if (sel) sel.value = "위치 오류";
           if (custom) {
             custom.value = "";
@@ -1574,6 +1532,13 @@ window.addEventListener("DOMContentLoaded", () => {
     if (box) {
       box.style.display = "none";
       box.innerHTML = "";
+    }
+
+    // 🔥 바텀시트를 완전 숨기지 말고, 윗부분만 보이는 닫힌 상태로
+    const listPanel = document.getElementById("list-panel");
+    if (listPanel) {
+      listPanel.style.bottom = `${getSheetClosedBottom(listPanel)}px`;
+      refreshSheetOpenClass();
     }
   });
 
