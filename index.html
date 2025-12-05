@@ -1,0 +1,345 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>내 주변 쓰레기통 찾기</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#007aff" />
+    <link rel="icon" href="icons/trash_192.png" />
+    <link rel="apple-touch-icon" href="icons/trash_192.png" />
+
+    <!-- Leaflet -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"
+    />
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css" />
+  </head>
+
+  <body>
+    <!-- 🔝 검색창 + 타입필터 -->
+    <div id="top-bar">
+      <div id="search-box">
+        <input
+          id="searchInput"
+          type="text"
+          placeholder="구·주소·장소명으로 쓰레기통 찾기"
+          autocomplete="off"
+        />
+        <div id="search-suggest"></div>
+
+        <!-- 타입 필터 -->
+        <div id="type-filter-box">
+          <label class="type-pill">
+            <input type="checkbox" id="typeAll" checked />
+            <span>모두</span>
+          </label>
+          <label class="type-pill">
+            <input type="checkbox" id="typeGeneral" checked />
+            <span>일반쓰레기</span>
+          </label>
+          <label class="type-pill">
+            <input type="checkbox" id="typeRecycle" checked />
+            <span>재활용</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- ☰ 햄버거 버튼 -->
+    <button id="settings-btn">
+      <span>☰</span>
+    </button>
+
+    <!-- ⬅ 왼쪽 슬라이드 (설정 패널) -->
+    <div id="side-panel">
+      <div id="side-panel-header">
+        <h2>설정</h2>
+        <button id="side-panel-close">✕</button>
+      </div>
+
+      <div id="side-panel-body">
+        <!-- 1. 앱 설정 -->
+        <div class="side-section">
+          <div class="side-section-title">앱 설정</div>
+
+          <div class="toggle-row">
+            <div class="toggle-label">🌙&nbsp;다크 모드</div>
+            <label class="switch">
+              <input type="checkbox" id="themeToggle" />
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="settings-divider"></div>
+
+        <!-- 2. 지도 스타일 -->
+        <div class="side-section map-style-section">
+          <div class="side-section-title">지도 스타일</div>
+
+          <label>
+            <input type="radio" name="mapStyle" value="osm" checked />
+            <span>OSM (기본)</span>
+          </label>
+
+          <label>
+            <input type="radio" name="mapStyle" value="carto" />
+            <span>CARTO</span>
+          </label>
+
+          <label>
+            <input type="radio" name="mapStyle" value="voyager" />
+            <span>Voyager</span>
+          </label>
+        </div>
+
+        <div class="settings-divider"></div>
+
+        <!-- 3. 문의사항 -->
+        <div class="side-section">
+          <div class="side-section-title">문의사항</div>
+          <p style="font-size:13px; color:#aaa; margin:0 0 10px;">
+            사용 중 불편한 점이나 개선 요청을 보내주세요.
+          </p>
+          <button
+            id="open-inquiry-btn"
+            class="settings-primary-btn"
+          >
+            문의하기
+          </button>
+        </div>
+
+        <div class="settings-divider"></div>
+
+        <!-- 4. 앱 공유 -->
+        <div class="side-section">
+          <div class="side-section-title">앱 공유</div>
+          <p style="font-size:13px; color:#aaa; margin:0 0 10px;">
+            주변 친구들에게 이 쓰레기통 지도를 알려주세요.
+          </p>
+          <button id="share-app-btn" class="settings-primary-btn">
+            친구에게 앱 공유하기
+          </button>
+        </div>
+
+        <div class="settings-divider"></div>
+
+        <!-- 5. 앱 평가하기 -->
+        <div class="side-section">
+          <div class="side-section-title">앱 평가하기</div>
+          <p style="font-size:13px; color:#aaa; margin:0 0 10px;">
+            도움이 되었다면 간단한 평가를 남겨주시면 큰 힘이 됩니다.
+          </p>
+          <button id="rate-app-btn" class="settings-primary-btn">
+            앱 평가하러 가기
+          </button>
+        </div>
+
+        <div class="settings-divider"></div>
+
+        <!-- 6. 📄 앱 정보 (앱정보 패널 열기 버튼) -->
+        <div class="side-section">
+          <div class="side-section-title">앱 정보</div>
+          <button
+            id="open-appinfo-btn"
+            class="settings-secondary-btn"
+          >
+            앱 정보 보기
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 설정 패널 뒤 검은 배경 -->
+    <div id="side-panel-backdrop"></div>
+
+    <!-- 지도 -->
+    <div id="map"></div>
+
+    <!-- 📄 리스트 패널 -->
+    <div id="list-panel" class="bottom-sheet">
+      <div id="list-handle" class="sheet-handle"></div>
+
+      <h3>내 주변 쓰레기통</h3>
+
+      <div id="list-filters">
+        <label>구 선택</label>
+        <select id="districtFilter">
+          <option value="ALL">전체 지역</option>
+        </select>
+
+        <label class="checkbox-row">
+          <input type="checkbox" id="viewportOnly" /> 현재 지도 화면 안에서만
+          보기
+        </label>
+
+        <label class="checkbox-row">
+          <input type="checkbox" id="districtCenterMode" /> 선택한 구 중심으로
+          정렬
+        </label>
+      </div>
+
+      <ul id="nearby-list"></ul>
+    </div>
+
+    <!-- 문의하기 팝업 -->
+    <div id="inquiry-backdrop"></div>
+    <div id="inquiry-modal">
+      <h3>문의하기</h3>
+
+      <div class="inquiry-field">
+        <label>문의 제목</label>
+
+        <select id="inquiry-title-select">
+          <option value="위치 오류">위치 오류</option>
+          <option value="쓰레기통 없음">쓰레기통 없음</option>
+          <option value="신규 요청">신규 요청</option>
+          <option value="기타">기타 (직접 입력)</option>
+        </select>
+
+        <input
+          id="inquiry-title-custom"
+          type="text"
+          placeholder="제목을 입력해 주세요"
+          style="margin-top: 8px; display: none;"
+        />
+      </div>
+
+      <div class="inquiry-field">
+        <label>위치명</label>
+        <div class="inquiry-location-row">
+          <input
+            id="inquiry-location"
+            type="text"
+            placeholder="지도에서 핀을 선택하거나 직접 입력할 수 있어요."
+          />
+          <button
+            type="button"
+            id="inquiry-pick-btn"
+            class="pick-location-btn"
+          >
+            지도에서 선택
+          </button>
+        </div>
+      </div>
+
+      <div class="inquiry-field">
+        <label>내용</label>
+        <textarea
+          id="inquiry-content"
+          placeholder="자세한 내용을 적어주세요."
+        ></textarea>
+      </div>
+
+      <div id="inquiry-modal-buttons">
+        <button id="inquiry-cancel-btn">취소</button>
+        <button id="inquiry-submit-btn">보내기</button>
+      </div>
+    </div>
+
+    <!-- 📄 앱 정보 패널 -->
+    <div id="appinfo-panel">
+      <div id="appinfo-header">
+        <h2>앱 정보</h2>
+        <button id="appinfo-close">✕</button>
+      </div>
+
+      <div id="appinfo-body">
+        <div class="info-block">
+          <strong>앱 이름</strong>
+          <p>내 주변 쓰레기통 찾기</p>
+        </div>
+
+        <div class="info-block">
+          <strong>버전</strong>
+          <p>v1.0.0</p>
+        </div>
+
+        <div class="info-block">
+          <strong>개발자</strong>
+          <p>SWY</p>
+        </div>
+
+        <div class="info-block">
+          <strong>문의 이메일</strong>
+          <p>knooky98@gmail.com</p>
+        </div>
+
+        <div class="info-block">
+          <strong>데이터 출처 및 안내</strong>
+          <p>
+            • 공공데이터포털(data.go.kr) 및 지자체 오픈데이터를 기반으로
+            수집되었습니다.<br />
+            • 일부 위치 정보는 실제 위치와 수 미터 이상의 오차가 있을 수
+            있습니다.<br />
+            • 사용자 신고를 통해 수시로 데이터가 보정·업데이트 됩니다.
+          </p>
+        </div>
+
+        <div class="info-block">
+          <strong>오픈소스 라이선스</strong>
+          <p>
+            Leaflet © 2010–2025 Vladimir Agafonkin<br />
+            Leaflet.markercluster © Dave Leaver<br />
+            Leaflet.PolylineDecorator © Benjamin Becquet<br />
+            지도 타일: © OpenStreetMap contributors, © CARTO
+          </p>
+        </div>
+
+        <div class="info-block">
+          <strong>정책 안내</strong>
+          <p>
+            <a
+              href="https://knooky98-web.github.io/trash-app-policy/terms.html"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              이용약관 보기
+            </a>
+            <br />
+            <a
+              href="https://knooky98-web.github.io/trash-app-policy/privacy.html"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              개인정보 처리방침 보기
+            </a>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 앱 정보 패널 배경 -->
+    <div id="appinfo-backdrop"></div>
+
+    <!-- JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <script src="https://unpkg.com/leaflet-polylinedecorator@1.7.0/dist/leaflet.polylineDecorator.js"></script>
+    <script src="https://unpkg.com/leaflet-rotatedmarker@0.2.0/leaflet.rotatedMarker.js"></script>
+
+    <script src="bins_seoul_final.js"></script>
+    <script src="app.js"></script>
+
+    <!-- PWA -->
+    <script>
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("service-worker.js");
+      }
+    </script>
+  </body>
+</html>
