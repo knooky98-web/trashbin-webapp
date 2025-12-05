@@ -836,7 +836,7 @@ function updateNearbyBins(lat, lng) {
     return;
   }
 
-  sorted.forEach((item, i) => {
+   sorted.forEach((item, i) => {
     const b = item.bin;
 
     const li = document.createElement("li");
@@ -844,11 +844,13 @@ function updateNearbyBins(lat, lng) {
     if (i === 0) li.classList.add("nearest-item");
 
     li.innerHTML = `
-      ${i === 0 ? `<span class="badge-nearest">가장 가까움</span>` : ""}
-      <strong>${b.name}</strong>
-      <span>${b.addr}</span>
+      <div class="nearby-header">
+        ${i === 0 ? `<span class="badge-nearest">가장 가까움</span>` : ""}
+        <strong class="bin-name">${b.name}</strong>
+        <span class="distance">${formatDistance(item.distance)}</span>
+      </div>
+      <span class="addr">${b.addr || ""}</span>
       <span class="info">${b.district || ""}${b.type ? " · " + b.type : ""}</span>
-      <span class="distance">${formatDistance(item.distance)}</span>
       <button class="direction-btn list-direction-btn">앱에서 경로 보기</button>
     `;
 
@@ -1133,14 +1135,62 @@ function createFloatingLocateButton() {
 /* ---------------------- INIT ---------------------- */
 window.addEventListener("DOMContentLoaded", () => {
   const listPanel = document.getElementById("list-panel");
-  enableDrag(listPanel, document.getElementById("list-handle"));
+  const listHandle = document.getElementById("list-handle");
   createFloatingLocateButton();
 
-  // 🔥 처음에는 살짝만 보이도록 닫힌 상태로 세팅
+  // 👉 처음에는 살짝만 보이도록 닫힌 상태로 세팅
   if (listPanel) {
-    listPanel.style.bottom = `${getSheetClosedBottom(listPanel)}px`;
+    const closedBottom = getSheetClosedBottom(listPanel);
+    listPanel.style.bottom = `${closedBottom}px`;
     refreshSheetOpenClass();
+
+    // ✅ 시트를 열고/닫는 토글 함수
+    const toggleSheet = () => {
+      const currentBottom = parseInt(
+        window.getComputedStyle(listPanel).bottom,
+        10
+      );
+      const closed = getSheetClosedBottom(listPanel);
+
+      // 현재가 거의 닫힌 상태면 → 완전 열기
+      if (currentBottom <= closed + 5) {
+        listPanel.style.bottom = "0px";
+      } else {
+        // 열려 있으면 → 다시 닫힌 위치로
+        listPanel.style.bottom = `${closed}px`;
+      }
+      refreshSheetOpenClass();
+    };
+
+    // 🔹 손잡이 터치/클릭 시 토글
+    if (listHandle) {
+      listHandle.addEventListener("click", (e) => {
+        e.stopPropagation();
+        toggleSheet();
+      });
+      listHandle.addEventListener("touchend", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleSheet();
+      });
+    }
+
+    // 🔹 카드 영역 배경(제목/필터 부근) 터치해도 토글되게
+    listPanel.addEventListener("click", (e) => {
+      const listEl = document.getElementById("nearby-list");
+      // 리스트 아이템(스크롤 영역) 클릭이면 무시
+      if (listEl && listEl.contains(e.target)) return;
+      toggleSheet();
+    });
+
+    listPanel.addEventListener("touchend", (e) => {
+      const listEl = document.getElementById("nearby-list");
+      if (listEl && listEl.contains(e.target)) return;
+      e.preventDefault();
+      toggleSheet();
+    });
   }
+
 
   // ✅ 문의 위치 입력칸은 항상 사용자가 직접 수정 가능하도록
   const inquiryLocationInput = document.getElementById("inquiry-location");
