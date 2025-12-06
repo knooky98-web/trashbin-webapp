@@ -194,11 +194,6 @@ body {
   }
 }
 
-/* 시트가 열린 상태일 때는 내 위치 버튼도 위로 올리기 */
-body.sheet-open #floating-locate {
-  bottom: calc(40vh + 16px);  /* 바텀시트 높이(40vh) + 여유 16px */
-}
-
 /* 작은 화면(시트 50vh일 때) 보정 */
 @media (max-height: 640px) {
   body.sheet-open #floating-locate {
