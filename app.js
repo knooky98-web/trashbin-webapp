@@ -1138,7 +1138,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const listHandle = document.getElementById("list-handle");
   createFloatingLocateButton();
 
-  // 👉 처음에는 살짝만 보이도록 닫힌 상태로 세팅
+   // 👉 처음에는 살짝만 보이도록 닫힌 상태로 세팅
   if (listPanel) {
     const closedBottom = getSheetClosedBottom(listPanel);
     listPanel.style.bottom = `${closedBottom}px`;
@@ -1175,22 +1175,8 @@ window.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    // 🔹 카드 영역 배경(제목/필터 부근) 터치해도 토글되게
-    listPanel.addEventListener("click", (e) => {
-      const listEl = document.getElementById("nearby-list");
-      // 리스트 아이템(스크롤 영역) 클릭이면 무시
-      if (listEl && listEl.contains(e.target)) return;
-      toggleSheet();
-    });
-
-    listPanel.addEventListener("touchend", (e) => {
-      const listEl = document.getElementById("nearby-list");
-      if (listEl && listEl.contains(e.target)) return;
-      e.preventDefault();
-      toggleSheet();
-    });
+    // 🔹 🔥 여기 있던 listPanel.addEventListener("click"/"touchend") 블록은 삭제!
   }
-
 
   // ✅ 문의 위치 입력칸은 항상 사용자가 직접 수정 가능하도록
   const inquiryLocationInput = document.getElementById("inquiry-location");
