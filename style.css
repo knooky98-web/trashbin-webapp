@@ -633,11 +633,16 @@ body {
 #settings-btn {
   position: absolute;
   z-index: 10000;
-  top: calc(env(safe-area-inset-top, 0px) + 70px);
-  left: 10%;
-  transform: translateX(-50%);
-  width: 38px;
-  height: 38px;
+
+  /* 🔹 상단 안전영역 + 검색/필터 블록 아래로 살짝 내리기 */
+  top: calc(env(safe-area-inset-top, 0px) + 120px);
+
+  /* 🔹 왼쪽에 고정 */
+  left: 16px;
+  transform: none;
+
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   border: none;
   background: rgba(255, 255, 255, 0.95);
@@ -1142,4 +1147,8 @@ body {
 .map-style-section label,
 .map-style-section label span {
   color: #333 !important;
+}
+
+body {
+  outline: 3px solid magenta !important;
 }
