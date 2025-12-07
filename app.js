@@ -45,8 +45,12 @@ let inAppRouteAlertShown = false;
 
 // ✅ 우리 앱에서 그린 경로(폴리라인)를 저장
 let routeLayer = null;
+// ✅ 바깥쪽 아웃라인(두꺼운 흰색 라인)
+let routeOutline = null;
 // ✅ 경로 화살표 레이어 저장
 let routeArrows = null;
+
+
 
 // ✅ 내 위치 + 방향 화살표용 전역
 let userMarker = null; // 내 위치 마커
@@ -466,6 +470,7 @@ function formatDistance(d) {
 }
 
 /* ---------------------- 경로 & 길찾기 ---------------------- */
+/* ---------------------- 경로 & 길찾기 ---------------------- */
 function drawRouteToBin(bin) {
   if (userLat == null || userLng == null) {
     alert(
@@ -483,9 +488,14 @@ function drawRouteToBin(bin) {
     return;
   }
 
+  // 🔥 기존 경로/아웃라인/화살표 제거
   if (routeLayer) {
     map.removeLayer(routeLayer);
     routeLayer = null;
+  }
+  if (routeOutline) {
+    map.removeLayer(routeOutline);
+    routeOutline = null;
   }
   if (routeArrows) {
     map.removeLayer(routeArrows);
@@ -512,14 +522,28 @@ function drawRouteToBin(bin) {
         return;
       }
 
-      const coords = data.routes[0].geometry.coordinates.map((c) => [c[1], c[0]]);
+      const coords = data.routes[0].geometry.coordinates.map((c) => [
+        c[1],
+        c[0],
+      ]);
 
-      routeLayer = L.polyline(coords, {
-        color: "#007aff",
-        weight: 7,
+      // ⚪ 바깥 아주 두꺼운 흰색 아웃라인
+      routeOutline = L.polyline(coords, {
+        color: "#ffffff",
+        weight: 14,
         opacity: 0.9,
+        lineJoin: "round",
       }).addTo(map);
 
+      // 🔵 안쪽 메인 파란 선
+      routeLayer = L.polyline(coords, {
+        color: "#1d4ed8",
+        weight: 7,
+        opacity: 1,
+        lineJoin: "round",
+      }).addTo(map);
+
+      // ⚪ 경로 위 흰색 화살표 (polylineDecorator가 있을 때만)
       if (L.polylineDecorator) {
         routeArrows = L.polylineDecorator(routeLayer, {
           patterns: [
@@ -531,8 +555,9 @@ function drawRouteToBin(bin) {
                 polygon: false,
                 pathOptions: {
                   stroke: true,
-                  color: "#007aff",
+                  color: "#ffffff",
                   weight: 2,
+                  opacity: 0.9,
                 },
               }),
             },
@@ -555,6 +580,7 @@ function drawRouteToBin(bin) {
       hideLoading();
     });
 }
+
 
 function openInAppRoute(bin) {
   if (!bin || !bin.lat || !bin.lng) {
