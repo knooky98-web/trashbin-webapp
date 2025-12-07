@@ -219,12 +219,6 @@ function updateUserMarkerHeading() {
     userMarker._icon.style.transform = `rotate(${finalHeading}deg)`;
   }
 
-  // (원하면 나침반 UI도 이동 방향 기준으로 돌릴 수 있음)
-  if (compassSvgEl) {
-    compassSvgEl.style.transform = `rotate(${finalHeading}deg)`;
-    compassSvgEl.style.transformOrigin = "50% 50%";
-  }
-}
 
 
 
@@ -1016,14 +1010,25 @@ function locateMe() {
       userLat = avg.lat / recentPositions.length;
       userLng = avg.lng / recentPositions.length;
 
-      const heading = p.coords.heading;
+           const heading = p.coords.heading;
       const speed = p.coords.speed;
 
-      if (heading !== null && !isNaN(heading) && speed !== null && speed > 0.5) {
+      // 🔒 방향은 "꽤 확실히 이동 중"일 때만 사용
+      // - heading 값 실제로 있고
+      // - 속도 1.2m/s 이상 (빠르게 걷기 이상)
+      // - 정확도도 어느 정도 괜찮을 때만
+      if (
+        heading !== null &&
+        !isNaN(heading) &&
+        speed !== null &&
+        speed > 1.2 &&      // ← 기존 0.5 → 1.2로 상향
+        acc <= 40           // ← 정확도도 40m 이하일 때만
+      ) {
         geoHeading = heading;
       } else {
         geoHeading = null;
       }
+
 
       if (!userMarker) {
         userMarker = L.marker([userLat, userLng], {
