@@ -634,7 +634,7 @@ body {
   position: absolute;
   z-index: 10000;
   top: 110px;
-  left: 5%;
+  left: 10%;
   transform: translateX(-50%);
   width: 38px;
   height: 38px;
