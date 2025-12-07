@@ -215,7 +215,7 @@ body {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: -26vh; /* 기본 숨겨진 상태: 화면 높이의 40% 만큼 아래로 */
+  bottom: -36vh; /* 기본 숨겨진 상태: 화면 높이의 40% 만큼 아래로 */
   background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(16px);
   border-top-left-radius: 24px;
@@ -398,7 +398,7 @@ body {
 /* 키가 더 작은 기기에서(예: 640px 이하) 시트 높이 조금 더 */
 @media (max-height: 640px) {
   .bottom-sheet {
-    bottom: -36vh;
+    bottom: -42vh;
     max-height: 50vh;
   }
 
