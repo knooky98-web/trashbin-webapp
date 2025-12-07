@@ -163,7 +163,7 @@ body {
 #floating-locate {
   position: fixed;
   right: 16px;
-  bottom: 40px;
+  bottom: 100px;
   width: 48px;
   height: 48px;
   border-radius: 999px;
@@ -509,7 +509,7 @@ body {
 ==================================== */
 .leaflet-control-zoom {
   position: absolute !important;
-  bottom: 110px;
+  bottom: 150px;
   right: 11px;
   left: auto !important;
   top: auto !important;
@@ -1117,4 +1117,9 @@ body {
 /* 자동완성 박스 강제 숨김 (현재 기능 OFF 상태) */
 #search-suggest {
   display: none !important;
+}
+
+.leaflet-top.leaflet-right .compass-control {
+  top: 95px !important;   /* 검색창 + 타입 필터 높이만큼 내려오기 */
+  right: 10px !important;
 }
