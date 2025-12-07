@@ -215,7 +215,7 @@ body {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: -40vh; /* 기본 숨겨진 상태: 화면 높이의 40% 만큼 아래로 */
+  bottom: -32vh; /* 기본 숨겨진 상태: 화면 높이의 40% 만큼 아래로 */
   background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(16px);
   border-top-left-radius: 24px;
