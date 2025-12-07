@@ -39,7 +39,7 @@ body {
 #top-bar {
   position: absolute;
   z-index: 9999;
-  top: 10px;
+  top: calc(env(safe-area-inset-top, 0px) + 16px);
   left: 50%;
   transform: translateX(-50%);
   width: 92%;
@@ -633,7 +633,7 @@ body {
 #settings-btn {
   position: absolute;
   z-index: 10000;
-  top: 110px;
+  top: calc(env(safe-area-inset-top, 0px) + 16px);
   left: 10%;
   transform: translateX(-50%);
   width: 38px;
