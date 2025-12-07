@@ -182,13 +182,13 @@ function updateUserMarkerHeading() {
   let heading = null;
   const now = Date.now();
 
-  // 🔹 1) 최근 몇 초 이내에 나침반 값이 들어왔으면 → 나침반 우선
-  const compassIsFresh = lastCompassTs && (now - lastCompassTs < 4000);
+  // 🔹 최근 3초 이내에 나침반 값이 들어왔으면 → 나침반 우선
+  const compassIsFresh = lastCompassTs && (now - lastCompassTs < 3000);
 
   if (compassIsFresh && compassHeading !== null && !isNaN(compassHeading)) {
     heading = compassHeading;
   }
-  // 🔹 2) 나침반 값이 없거나 오래됐으면 → GPS 이동 방향 사용
+  // 🔹 나침반 값이 없거나 오래됐으면 → GPS 이동 방향 사용
   else if (geoHeading !== null && !isNaN(geoHeading)) {
     heading = geoHeading;
   } else {
@@ -199,7 +199,7 @@ function updateUserMarkerHeading() {
   heading = normalizeHeading(heading);
 
   if (lastHeading === null) {
-    // 첫 값은 바로 반영
+    // 첫 값은 그냥 바로 반영
     lastHeading = heading;
   } else {
     // 항상 "최단 경로"로 회전하도록 각도 차이 계산 (-180 ~ 180)
@@ -207,9 +207,18 @@ function updateUserMarkerHeading() {
     if (diff > 180) diff -= 360;
     if (diff < -180) diff += 360;
 
-    // 🔧 스무딩: 한 번에 diff의 25%만 따라가도록
-    const factor = 0.25;
-    lastHeading = normalizeHeading(lastHeading + diff * factor);
+    // 🔇 1) 4도 이하의 미세한 변화는 아예 무시 (잔떨림 제거)
+    if (Math.abs(diff) < 4) {
+      return;
+    }
+
+    // 🔧 2) 한 번에 너무 많이 돌지 않게 최대 회전량 제한
+    const maxStep = 12;           // 한 번 업데이트에서 최대 12도만 회전
+    let step = diff * 0.2;        // 기본은 20%만 따라가기
+    if (step > maxStep) step = maxStep;
+    if (step < -maxStep) step = -maxStep;
+
+    lastHeading = normalizeHeading(lastHeading + step);
   }
 
   const finalHeading = lastHeading;
@@ -230,8 +239,16 @@ function updateUserMarkerHeading() {
 
 
 
+
 /* ---------------------- 나침반 ---------------------- */
 function handleOrientation(event) {
+  const now = Date.now();
+
+  // 🔇 0. 너무 자주 들어오는 이벤트는 무시 (최소 80ms 간격)
+  if (lastCompassTs && (now - lastCompassTs < 80)) {
+    return;
+  }
+
   let heading = null;
 
   // 🔹 iOS Safari: webkitCompassHeading 제공 (0도 = 북쪽)
@@ -248,10 +265,11 @@ function handleOrientation(event) {
   if (heading === null) return;
 
   compassHeading = normalizeHeading(heading);
-  lastCompassTs = Date.now();   // 최근 나침반 값 시각 업데이트
+  lastCompassTs = now;   // 최근 나침반 값 시각 업데이트
 
   updateUserMarkerHeading();
 }
+
 
 
 function initCompass() {
