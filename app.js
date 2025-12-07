@@ -51,13 +51,22 @@ let routeOutline = null;
 let routeArrows = null;
 
 // ✅ 내 위치 + 방향 화살표용 전역
-let userMarker = null; // 내 위치 마커
-let geoHeading = null; // GPS 이동 방향 (속도 있을 때만)
-let compassHeading = null; // 나침반 방향
-let lastHeading = null; // 마지막으로 사용한 각도(스무딩용)
-let geoWatchId = null; // watchPosition ID
-let hasInitialFix = false; // 첫 위치를 잡았는지 여부
-let compassStarted = false; // 나침반 이벤트 중복 등록 방지
+let userMarker = null;        // 내 위치 마커
+let geoHeading = null;        // GPS 이동 방향 (속도 있을 때만)
+let compassHeading = null;    // 나침반 방향
+let lastHeading = null;       // 마지막으로 사용한 각도(스무딩용)
+let geoWatchId = null;        // watchPosition ID
+let hasInitialFix = false;    // 첫 위치를 잡았는지 여부
+let compassStarted = false;   // 나침반 이벤트 중복 등록 방지
+let lastCompassTs = 0;        // 마지막 나침반 이벤트 시각(ms)
+
+/* 방향 보정 유틸 */
+function normalizeHeading(deg) {
+  let h = deg % 360;
+  if (h < 0) h += 360;
+  return h;
+}
+
 
 // 🔧 위치 정확도 개선용 전역
 const MIN_ACCURACY = 50; // m, 이보다 안 좋으면 위치 업데이트 무시
@@ -167,90 +176,83 @@ const userArrowIcon = L.divIcon({
   iconAnchor: [20, 20], // 중심 기준
 });
 
-/* ---------------------- 방향 업데이트 ---------------------- */
-function normalizeHeading(deg) {
-  // 0~360 범위로 정규화
-  let h = deg % 360;
-  if (h < 0) h += 360;
-  return h;
-}
 
-function diffHeading(a, b) {
-  // 두 각도 차이(0~180)
-  let d = Math.abs(a - b);
-  if (d > 180) d = 360 - d;
-  return d;
-}
 
 function updateUserMarkerHeading() {
   let heading = null;
+  const now = Date.now();
 
-  // 1) 움직이는 중이면 GPS 방향 우선
-  if (geoHeading !== null && !isNaN(geoHeading)) {
-    heading = geoHeading;
-  } else if (compassHeading !== null && !isNaN(compassHeading)) {
-    // 2) 서 있을 땐 나침반 방향
+  // 🔹 1) 최근 몇 초 이내에 나침반 값이 들어왔으면 → 나침반 우선
+  const compassIsFresh = lastCompassTs && (now - lastCompassTs < 4000);
+
+  if (compassIsFresh && compassHeading !== null && !isNaN(compassHeading)) {
     heading = compassHeading;
   }
-
-  if (heading === null) return;
+  // 🔹 2) 나침반 값이 없거나 오래됐으면 → GPS 이동 방향 사용
+  else if (geoHeading !== null && !isNaN(geoHeading)) {
+    heading = geoHeading;
+  } else {
+    // 둘 다 없으면 그냥 리턴
+    return;
+  }
 
   heading = normalizeHeading(heading);
 
-  // 🔧 직전 각도와 비교해서 이상한 점프/잔떨림 필터링
-  if (lastHeading !== null) {
-    const diff = diffHeading(heading, lastHeading);
+  if (lastHeading === null) {
+    // 첫 값은 바로 반영
+    lastHeading = heading;
+  } else {
+    // 항상 "최단 경로"로 회전하도록 각도 차이 계산 (-180 ~ 180)
+    let diff = heading - lastHeading;
+    if (diff > 180) diff -= 360;
+    if (diff < -180) diff += 360;
 
-    // 갑자기 70도 이상 확 튀면 센서 노이즈로 보고 무시
-    if (diff > 70) {
-      return;
-    }
-
-    // 2도 이하 미세한 변화면 굳이 업데이트 안 함 (잔 떨림 방지)
-    if (diff < 2) {
-      heading = lastHeading;
-    } else {
-      // 부드럽게 따라가도록 스무딩 (가중 평균)
-      heading = normalizeHeading(lastHeading * 0.7 + heading * 0.3);
-    }
+    // 🔧 스무딩: 한 번에 diff의 25%만 따라가도록
+    const factor = 0.25;
+    lastHeading = normalizeHeading(lastHeading + diff * factor);
   }
 
-  lastHeading = heading;
+  const finalHeading = lastHeading;
 
   // 🔺 내 위치 화살표 회전
   if (userMarker && typeof userMarker.setRotationAngle === "function") {
-    userMarker.setRotationAngle(heading);
+    userMarker.setRotationAngle(finalHeading);
   } else if (userMarker && userMarker._icon) {
-    userMarker._icon.style.transform = `rotate(${heading}deg)`;
+    userMarker._icon.style.transform = `rotate(${finalHeading}deg)`;
   }
 
   // 🔺 우측 상단 나침반 UI도 같이 회전
   if (compassSvgEl) {
-    compassSvgEl.style.transform = `rotate(${heading}deg)`;
+    compassSvgEl.style.transform = `rotate(${finalHeading}deg)`;
     compassSvgEl.style.transformOrigin = "50% 50%";
   }
 }
+
+
 
 /* ---------------------- 나침반 ---------------------- */
 function handleOrientation(event) {
   let heading = null;
 
-  // 🔹 iOS: webkitCompassHeading 사용 (0도 = 북쪽)
-  if (typeof event.webkitCompassHeading === "number") {
+  // 🔹 iOS Safari: webkitCompassHeading 제공 (0도 = 북쪽)
+  if (typeof event.webkitCompassHeading === "number" && !isNaN(event.webkitCompassHeading)) {
     heading = event.webkitCompassHeading;
   }
-  // 🔹 Android 등: alpha 사용
-  else if (typeof event.alpha === "number") {
-    // 일반적으로 alpha: 0도 = 장치 위쪽이 북쪽을 향할 때.
-    // 지도 북쪽 기준 방향으로 맞추기 위해 360 - alpha 사용
+  // 🔹 안드로이드/기타: alpha 사용
+  else if (typeof event.alpha === "number" && !isNaN(event.alpha)) {
+    // 보통 alpha: 0도 = 장치 위쪽이 북쪽을 향할 때
+    // 지도 기준(북쪽 위)으로 맞추기 위해 360 - alpha 사용
     heading = 360 - event.alpha;
   }
 
-  if (heading === null || isNaN(heading)) return;
+  if (heading === null) return;
 
-  compassHeading = heading;
+  compassHeading = normalizeHeading(heading);
+  lastCompassTs = Date.now();   // 최근 나침반 값 시각 업데이트
+
   updateUserMarkerHeading();
 }
+
 
 function initCompass() {
   if (compassStarted) return; // 중복 등록 방지
@@ -262,7 +264,7 @@ function initCompass() {
     window.addEventListener("deviceorientation", handleOrientation, true);
   };
 
-  // iOS: 권한 요청 필요
+  // 🔹 iOS 13+ : 권한 요청 필요
   if (typeof DeviceOrientationEvent.requestPermission === "function") {
     DeviceOrientationEvent.requestPermission()
       .then((res) => {
@@ -274,7 +276,7 @@ function initCompass() {
       })
       .catch((err) => console.error(err));
   } else {
-    // Android 등: 바로 등록
+    // 🔹 안드로이드/기타: 바로 시작
     startListening();
   }
 }
