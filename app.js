@@ -327,8 +327,8 @@ function createCompassControl() {
     div.style.width = "50px";
     div.style.height = "50px";
     div.style.borderRadius = "50%";
-    div.style.background = "rgba(255,255,255,0.9)";
-    div.style.boxShadow = "0 2px 6px rgba(0,0,0,0.25)";
+    div.style.background = "transparent";
+    div.style.boxShadow = "none";
     div.style.display = "flex";
     div.style.alignItems = "center";
     div.style.justifyContent = "center";
