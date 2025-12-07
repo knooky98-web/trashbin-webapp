@@ -548,10 +548,10 @@ function drawRouteToBin(bin) {
         routeArrows = L.polylineDecorator(routeLayer, {
           patterns: [
             {
-              offset: 25,
+              offset: 20,
               repeat: 50,
               symbol: L.Symbol.arrowHead({
-                pixelSize: 12,
+                pixelSize: 14,
                 polygon: false,
                 pathOptions: {
                   stroke: true,
