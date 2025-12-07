@@ -633,7 +633,7 @@ body {
 #settings-btn {
   position: absolute;
   z-index: 10000;
-  top: calc(env(safe-area-inset-top, 0px) + 16px);
+  top: calc(env(safe-area-inset-top, 0px) + 45px);
   left: 10%;
   transform: translateX(-50%);
   width: 38px;
@@ -1128,4 +1128,18 @@ body {
 .leaflet-top.leaflet-right .compass-control {
   top: 95px !important;   /* 검색창 + 타입 필터 높이만큼 내려오기 */
   right: 10px !important;
+}
+/* =========================
+   설정 패널 글자 가독성 강화 (옵션 A)
+========================= */
+
+/* 설정 패널 안의 대부분 텍스트를 진한 회색으로 */
+#side-panel,
+#side-panel-body,
+#side-panel-body p,
+.side-section-title,
+.toggle-label,
+.map-style-section label,
+.map-style-section label span {
+  color: #333 !important;
 }
