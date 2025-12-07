@@ -1,4 +1,4 @@
-내가 코드 보내줄테니까 전부 직접 수정해서 나한테 다시 보내줘 /* =====================================================
+/* =====================================================
    쓰레기통 웹앱 app.js
    - 마커 하이라이트
    - 중복 제거
@@ -218,7 +218,7 @@ function updateUserMarkerHeading() {
   } else if (userMarker && userMarker._icon) {
     userMarker._icon.style.transform = `rotate(${finalHeading}deg)`;
   }
-
+}
 
 
 
