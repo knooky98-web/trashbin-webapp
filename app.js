@@ -8,7 +8,6 @@
    - 타입 필터(모두 / 일반 / 재활용)
    - 지도 테마(라이트/다크) + 스타일(OSM/CARTO/Voyager) 선택
    - 슬라이드 설정 패널 + 문의하기 팝업
-   - 나침반 방향 기준 지도 회전
 ===================================================== */
 
 /* ---------------------- GLOBAL STATE ---------------------- */
@@ -80,10 +79,6 @@ let loadingTextEl = null;
 
 // 🧷 지도에서 문의 위치 선택 모드 여부
 let isPickingInquiryLocation = false;
-
-// ✅ 지도 회전 각도 (0 = 북쪽이 위)
-//  - 이 값은 "내가 바라보는 방향" 기준 각도
-let mapRotationDeg = 0;
 
 /* ---------------------- 방향 보정 유틸 ---------------------- */
 function normalizeHeading(deg) {
@@ -319,23 +314,6 @@ const markerCluster = L.markerClusterGroup({
   disableClusteringAtZoom: 18,
 });
 map.addLayer(markerCluster);
-
-/* 🔄 지도 회전 헬퍼 */
-function applyMapRotation() {
-  const mapPane = map.getPanes().mapPane;
-  if (!mapPane) return;
-
-  const base = mapPane.style.transform || "";
-  // 기존 translate3d(...) 안 건드리고 rotate(...)만 제거
-  const withoutRotate = base.replace(/rotate\([^)]*\)/g, "").trim();
-
-  // 내가 보는 방향이 위로 가게 → 지도는 반대로 회전
-  mapPane.style.transform = `${withoutRotate} rotate(${-mapRotationDeg}deg)`;
-}
-
-// 지도가 움직이거나 줌 바뀔 때마다 회전 다시 적용
-map.on("move", applyMapRotation);
-map.on("zoom", applyMapRotation);
 
 /* ---------------------- 우측 상단 나침반 컨트롤 ---------------------- */
 function createCompassControl() {
@@ -1184,7 +1162,7 @@ function createFloatingLocateButton() {
   document.body.appendChild(btn);
 }
 
-/* ---------------------- 나침반 (지도 회전 전용) ---------------------- */
+/* ---------------------- 나침반 ---------------------- */
 function handleOrientation(event) {
   let heading = null;
 
@@ -1195,7 +1173,7 @@ function handleOrientation(event) {
   ) {
     heading = event.webkitCompassHeading;
   }
-  // 안드로이드/기타: alpha 사용 (0도 = 장치 위쪽이 북쪽)
+  // 안드로이드/기타: alpha 사용
   else if (typeof event.alpha === "number" && !isNaN(event.alpha)) {
     heading = 360 - event.alpha;
   }
@@ -1204,15 +1182,11 @@ function handleOrientation(event) {
 
   const h = normalizeHeading(heading);
 
-  // 🔹 우측 상단 나침반 UI 회전
+  // 🔹 우측 상단 나침반 UI만 회전
   if (compassSvgEl) {
     compassSvgEl.style.transform = `rotate(${h}deg)`;
     compassSvgEl.style.transformOrigin = "50% 50%";
   }
-
-  // 🔹 지도 자체 회전 (내가 보는 방향이 위로 가게)
-  mapRotationDeg = h;
-  applyMapRotation();
 }
 
 function initCompass() {
