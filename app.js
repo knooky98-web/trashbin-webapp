@@ -1087,7 +1087,7 @@ function locateMe() {
 
 /* ---------------------- 바텀시트 닫힌 위치 계산 🔥 ---------------------- */
 function getSheetClosedBottom(panel) {
-  const peek = 80; 
+  const peek = 140; 
   return -(panel.offsetHeight - peek);
 }
 
