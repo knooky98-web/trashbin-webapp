@@ -153,7 +153,7 @@ const myLocationSVG = `
 <svg width="40" height="40" viewBox="0 0 24 24"
   xmlns="http://www.w3.org/2000/svg">
   <path d="M12 2 L20 22 L12 17 L4 22 Z"
-    fill="#2979FF"
+    fill="#ff3b30"
     stroke="white"
     stroke-width="2"
     stroke-linejoin="round"
@@ -1737,3 +1737,4 @@ async function updateBinLocation(binId, newLat, newLng) {
     console.error("업데이트 실패:", err);
   }
 }
+
