@@ -50,15 +50,14 @@ let routeOutline = null;
 // ✅ 경로 화살표 레이어 저장
 let routeArrows = null;
 
-
-
 // ✅ 내 위치 + 방향 화살표용 전역
 let userMarker = null; // 내 위치 마커
-let geoHeading = null; // GPS 이동 방향
+let geoHeading = null; // GPS 이동 방향 (속도 있을 때만)
 let compassHeading = null; // 나침반 방향
-let lastHeading = 0; // 마지막으로 사용한 각도
+let lastHeading = null; // 마지막으로 사용한 각도(스무딩용)
 let geoWatchId = null; // watchPosition ID
 let hasInitialFix = false; // 첫 위치를 잡았는지 여부
+let compassStarted = false; // 나침반 이벤트 중복 등록 방지
 
 // 🔧 위치 정확도 개선용 전역
 const MIN_ACCURACY = 50; // m, 이보다 안 좋으면 위치 업데이트 무시
@@ -169,25 +168,63 @@ const userArrowIcon = L.divIcon({
 });
 
 /* ---------------------- 방향 업데이트 ---------------------- */
+function normalizeHeading(deg) {
+  // 0~360 범위로 정규화
+  let h = deg % 360;
+  if (h < 0) h += 360;
+  return h;
+}
+
+function diffHeading(a, b) {
+  // 두 각도 차이(0~180)
+  let d = Math.abs(a - b);
+  if (d > 180) d = 360 - d;
+  return d;
+}
+
 function updateUserMarkerHeading() {
   let heading = null;
 
+  // 1) 움직이는 중이면 GPS 방향 우선
   if (geoHeading !== null && !isNaN(geoHeading)) {
-    heading = geoHeading; // 이동 중이면 GPS 우선
+    heading = geoHeading;
   } else if (compassHeading !== null && !isNaN(compassHeading)) {
-    heading = compassHeading; // 멈춰 있으면 나침반 사용
+    // 2) 서 있을 땐 나침반 방향
+    heading = compassHeading;
   }
 
   if (heading === null) return;
 
+  heading = normalizeHeading(heading);
+
+  // 🔧 직전 각도와 비교해서 이상한 점프/잔떨림 필터링
+  if (lastHeading !== null) {
+    const diff = diffHeading(heading, lastHeading);
+
+    // 갑자기 70도 이상 확 튀면 센서 노이즈로 보고 무시
+    if (diff > 70) {
+      return;
+    }
+
+    // 2도 이하 미세한 변화면 굳이 업데이트 안 함 (잔 떨림 방지)
+    if (diff < 2) {
+      heading = lastHeading;
+    } else {
+      // 부드럽게 따라가도록 스무딩 (가중 평균)
+      heading = normalizeHeading(lastHeading * 0.7 + heading * 0.3);
+    }
+  }
+
   lastHeading = heading;
 
+  // 🔺 내 위치 화살표 회전
   if (userMarker && typeof userMarker.setRotationAngle === "function") {
     userMarker.setRotationAngle(heading);
   } else if (userMarker && userMarker._icon) {
     userMarker._icon.style.transform = `rotate(${heading}deg)`;
   }
 
+  // 🔺 우측 상단 나침반 UI도 같이 회전
   if (compassSvgEl) {
     compassSvgEl.style.transform = `rotate(${heading}deg)`;
     compassSvgEl.style.transformOrigin = "50% 50%";
@@ -196,28 +233,49 @@ function updateUserMarkerHeading() {
 
 /* ---------------------- 나침반 ---------------------- */
 function handleOrientation(event) {
-  const alpha = event.alpha;
-  if (alpha === null || isNaN(alpha)) return;
+  let heading = null;
 
-  compassHeading = alpha;
+  // 🔹 iOS: webkitCompassHeading 사용 (0도 = 북쪽)
+  if (typeof event.webkitCompassHeading === "number") {
+    heading = event.webkitCompassHeading;
+  }
+  // 🔹 Android 등: alpha 사용
+  else if (typeof event.alpha === "number") {
+    // 일반적으로 alpha: 0도 = 장치 위쪽이 북쪽을 향할 때.
+    // 지도 북쪽 기준 방향으로 맞추기 위해 360 - alpha 사용
+    heading = 360 - event.alpha;
+  }
+
+  if (heading === null || isNaN(heading)) return;
+
+  compassHeading = heading;
   updateUserMarkerHeading();
 }
 
 function initCompass() {
+  if (compassStarted) return; // 중복 등록 방지
   if (typeof DeviceOrientationEvent === "undefined") return;
 
+  const startListening = () => {
+    if (compassStarted) return;
+    compassStarted = true;
+    window.addEventListener("deviceorientation", handleOrientation, true);
+  };
+
+  // iOS: 권한 요청 필요
   if (typeof DeviceOrientationEvent.requestPermission === "function") {
     DeviceOrientationEvent.requestPermission()
       .then((res) => {
         if (res === "granted") {
-          window.addEventListener("deviceorientation", handleOrientation, true);
+          startListening();
         } else {
           console.log("나침반 권한 거부됨");
         }
       })
       .catch((err) => console.error(err));
   } else {
-    window.addEventListener("deviceorientation", handleOrientation, true);
+    // Android 등: 바로 등록
+    startListening();
   }
 }
 
@@ -470,7 +528,6 @@ function formatDistance(d) {
 }
 
 /* ---------------------- 경로 & 길찾기 ---------------------- */
-/* ---------------------- 경로 & 길찾기 ---------------------- */
 function drawRouteToBin(bin) {
   if (userLat == null || userLng == null) {
     alert(
@@ -580,7 +637,6 @@ function drawRouteToBin(bin) {
       hideLoading();
     });
 }
-
 
 function openInAppRoute(bin) {
   if (!bin || !bin.lat || !bin.lng) {
@@ -862,7 +918,7 @@ function updateNearbyBins(lat, lng) {
     return;
   }
 
-   sorted.forEach((item, i) => {
+  sorted.forEach((item, i) => {
     const b = item.bin;
 
     const li = document.createElement("li");
@@ -972,7 +1028,7 @@ function locateMe() {
       if (!userMarker) {
         userMarker = L.marker([userLat, userLng], {
           icon: userArrowIcon,
-          rotationAngle: lastHeading,
+          rotationAngle: lastHeading ?? 0,
           rotationOrigin: "center center",
         }).addTo(map);
       } else {
@@ -1134,7 +1190,6 @@ function enableDrag(panel, handle) {
   window.addEventListener("touchend", onEnd);
 }
 
-
 /* ---------------------- FLOATING LOCATE BTN ---------------------- */
 function createFloatingLocateButton() {
   if (document.getElementById("floating-locate")) return;
@@ -1164,7 +1219,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const listHandle = document.getElementById("list-handle");
   createFloatingLocateButton();
 
-   // 👉 처음에는 살짝만 보이도록 닫힌 상태로 세팅
+  // 👉 처음에는 살짝만 보이도록 닫힌 상태로 세팅
   if (listPanel) {
     const closedBottom = getSheetClosedBottom(listPanel);
     listPanel.style.bottom = `${closedBottom}px`;
@@ -1737,4 +1792,3 @@ async function updateBinLocation(binId, newLat, newLng) {
     console.error("업데이트 실패:", err);
   }
 }
-
