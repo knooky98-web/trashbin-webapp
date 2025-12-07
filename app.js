@@ -1,4 +1,4 @@
-/* =====================================================
+내가 코드 보내줄테니까 전부 직접 수정해서 나한테 다시 보내줘 /* =====================================================
    쓰레기통 웹앱 app.js
    - 마커 하이라이트
    - 중복 제거
@@ -53,12 +53,20 @@ let routeArrows = null;
 // ✅ 내 위치 + 방향 화살표용 전역
 let userMarker = null;        // 내 위치 마커
 let geoHeading = null;        // GPS 이동 방향 (속도 있을 때만)
-let compassHeading = null;    // 나침반 방향 (현재는 지도 회전에만 사용 가능)
+let compassHeading = null;    // 나침반 방향
 let lastHeading = null;       // 마지막으로 사용한 각도(스무딩용)
 let geoWatchId = null;        // watchPosition ID
 let hasInitialFix = false;    // 첫 위치를 잡았는지 여부
 let compassStarted = false;   // 나침반 이벤트 중복 등록 방지
 let lastCompassTs = 0;        // 마지막 나침반 이벤트 시각(ms)
+
+/* 방향 보정 유틸 */
+function normalizeHeading(deg) {
+  let h = deg % 360;
+  if (h < 0) h += 360;
+  return h;
+}
+
 
 // 🔧 위치 정확도 개선용 전역
 const MIN_ACCURACY = 50; // m, 이보다 안 좋으면 위치 업데이트 무시
@@ -70,7 +78,7 @@ let compassSvgEl = null;
 
 // ✅ 지도 테마/스타일 상태
 let currentTheme = "light"; // "light" | "dark"
-let currentStyle = "osm";   // "osm" | "carto" | "voyager"
+let currentStyle = "osm"; // "osm" | "carto" | "voyager"
 let tileLayer = null;
 
 // 🔄 로딩 오버레이용 전역
@@ -79,13 +87,6 @@ let loadingTextEl = null;
 
 // 🧷 지도에서 문의 위치 선택 모드 여부
 let isPickingInquiryLocation = false;
-
-/* ---------------------- 방향 보정 유틸 ---------------------- */
-function normalizeHeading(deg) {
-  let h = deg % 360;
-  if (h < 0) h += 360;
-  return h;
-}
 
 /* ---------------------- LOADING OVERLAY ---------------------- */
 function ensureLoadingOverlay() {
@@ -175,7 +176,8 @@ const userArrowIcon = L.divIcon({
   iconAnchor: [20, 20], // 중심 기준
 });
 
-/* ---------------------- 내 위치 화살표 회전 (GPS 기반) ---------------------- */
+
+
 function updateUserMarkerHeading() {
   // 🔹 이동 방향(GPS heading)이 없으면 방향 업데이트 안 함
   if (geoHeading === null || isNaN(geoHeading)) {
@@ -215,6 +217,59 @@ function updateUserMarkerHeading() {
     userMarker.setRotationAngle(finalHeading);
   } else if (userMarker && userMarker._icon) {
     userMarker._icon.style.transform = `rotate(${finalHeading}deg)`;
+  }
+
+
+
+
+
+/* ---------------------- 나침반 ---------------------- */
+function handleOrientation(event) {
+  let heading = null;
+
+  if (typeof event.webkitCompassHeading === "number" && !isNaN(event.webkitCompassHeading)) {
+    heading = event.webkitCompassHeading;
+  } else if (typeof event.alpha === "number" && !isNaN(event.alpha)) {
+    heading = 360 - event.alpha;
+  }
+
+  if (heading === null) return;
+
+  // 🔹 나침반 동그라미 UI만 돌림 (화살표는 건드리지 않음)
+  if (compassSvgEl) {
+    const h = normalizeHeading(heading);
+    compassSvgEl.style.transform = `rotate(${h}deg)`;
+    compassSvgEl.style.transformOrigin = "50% 50%";
+  }
+}
+
+
+
+
+function initCompass() {
+  if (compassStarted) return; // 중복 등록 방지
+  if (typeof DeviceOrientationEvent === "undefined") return;
+
+  const startListening = () => {
+    if (compassStarted) return;
+    compassStarted = true;
+    window.addEventListener("deviceorientation", handleOrientation, true);
+  };
+
+  // 🔹 iOS 13+ : 권한 요청 필요
+  if (typeof DeviceOrientationEvent.requestPermission === "function") {
+    DeviceOrientationEvent.requestPermission()
+      .then((res) => {
+        if (res === "granted") {
+          startListening();
+        } else {
+          console.log("나침반 권한 거부됨");
+        }
+      })
+      .catch((err) => console.error(err));
+  } else {
+    // 🔹 안드로이드/기타: 바로 시작
+    startListening();
   }
 }
 
@@ -955,7 +1010,7 @@ function locateMe() {
       userLat = avg.lat / recentPositions.length;
       userLng = avg.lng / recentPositions.length;
 
-      const heading = p.coords.heading;
+           const heading = p.coords.heading;
       const speed = p.coords.speed;
 
       // 🔒 방향은 "꽤 확실히 이동 중"일 때만 사용
@@ -966,13 +1021,14 @@ function locateMe() {
         heading !== null &&
         !isNaN(heading) &&
         speed !== null &&
-        speed > 1.2 &&
-        acc <= 40
+        speed > 1.2 &&      // ← 기존 0.5 → 1.2로 상향
+        acc <= 40           // ← 정확도도 40m 이하일 때만
       ) {
         geoHeading = heading;
       } else {
         geoHeading = null;
       }
+
 
       if (!userMarker) {
         userMarker = L.marker([userLat, userLng], {
@@ -1162,60 +1218,6 @@ function createFloatingLocateButton() {
   document.body.appendChild(btn);
 }
 
-/* ---------------------- 나침반 ---------------------- */
-function handleOrientation(event) {
-  let heading = null;
-
-  // iOS Safari: webkitCompassHeading (0도 = 북쪽)
-  if (
-    typeof event.webkitCompassHeading === "number" &&
-    !isNaN(event.webkitCompassHeading)
-  ) {
-    heading = event.webkitCompassHeading;
-  }
-  // 안드로이드/기타: alpha 사용
-  else if (typeof event.alpha === "number" && !isNaN(event.alpha)) {
-    heading = 360 - event.alpha;
-  }
-
-  if (heading === null) return;
-
-  const h = normalizeHeading(heading);
-
-  // 🔹 우측 상단 나침반 UI만 회전
-  if (compassSvgEl) {
-    compassSvgEl.style.transform = `rotate(${h}deg)`;
-    compassSvgEl.style.transformOrigin = "50% 50%";
-  }
-}
-
-function initCompass() {
-  if (compassStarted) return; // 중복 등록 방지
-  if (typeof DeviceOrientationEvent === "undefined") return;
-
-  const startListening = () => {
-    if (compassStarted) return;
-    compassStarted = true;
-    window.addEventListener("deviceorientation", handleOrientation, true);
-  };
-
-  // 🔹 iOS 13+ : 권한 요청 필요
-  if (typeof DeviceOrientationEvent.requestPermission === "function") {
-    DeviceOrientationEvent.requestPermission()
-      .then((res) => {
-        if (res === "granted") {
-          startListening();
-        } else {
-          console.log("나침반 권한 거부됨");
-        }
-      })
-      .catch((err) => console.error(err));
-  } else {
-    // 🔹 안드로이드/기타: 바로 시작
-    startListening();
-  }
-}
-
 /* ---------------------- INIT ---------------------- */
 window.addEventListener("DOMContentLoaded", () => {
   const listPanel = document.getElementById("list-panel");
@@ -1259,7 +1261,7 @@ window.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    // 🔹 listPanel 전체 클릭/터치로 여닫는 로직은 제거 (드래그/스크롤 방해 방지)
+    // 🔹 🔥 여기 있던 listPanel.addEventListener("click"/"touchend") 블록은 삭제!
   }
 
   // ✅ 문의 위치 입력칸은 항상 사용자가 직접 수정 가능하도록
