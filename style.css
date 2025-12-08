@@ -489,13 +489,74 @@ body {
 /* ====================================
    나침반 (우측 상단 컨트롤)
 ==================================== */
+/* =============================
+   나침반 세련된 밝은 스타일 (Glass)
+============================= */
 .compass-control {
+  position: relative;
+  width: 54px !important;
+  height: 54px !important;
+
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.65); /* 밝은 유리 */
+  box-shadow:
+    0 4px 12px rgba(0,0,0,0.15),
+    0 0 0 1px rgba(200,200,200,0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
   margin-top: 50px;
   margin-right: 8px;
 }
 
 .compass-control svg {
-  filter: drop-shadow(0 4px 10px rgba(15, 23, 42, 0.25));
+  transition: transform 0.15s ease-out;
+}
+
+/* 방향 문자 */
+.compass-label-main {
+  fill: #1e40af;  /* 진한 파랑 (N) */
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.compass-label-sub {
+  fill: #374151;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+/* 중앙 점 */
+.compass-center {
+  fill: white;
+  stroke: #1d4ed8;
+  stroke-width: 2;
+}
+
+/* 화살표 */
+.compass-arrow {
+  fill: #1d4ed8;               
+  stroke: rgba(255,255,255,0.9);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+/* 바깥 원 */
+.compass-circle-outer {
+  stroke: rgba(120,120,120,0.4);
+  stroke-width: 2;
+  fill: rgba(255,255,255,0.3);
+}
+
+/* 내부 점선 원 */
+.compass-circle-inner {
+  stroke: rgba(0,0,0,0.25);
+  stroke-width: 1.3;
+  stroke-dasharray: 4 4;
+  fill: none;
 }
 
 /* ====================================
