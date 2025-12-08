@@ -158,24 +158,23 @@ function hideLoading() {
 }
 
 /* ---------------------- 내 위치 화살표 아이콘 ---------------------- */
-const myLocationSVG = `
-<svg width="40" height="40" viewBox="0 0 24 24"
-  xmlns="http://www.w3.org/2000/svg">
-  <path d="M12 2 L20 22 L12 17 L4 22 Z"
-    fill="#ff3b30"
-    stroke="white"
-    stroke-width="2"
-    stroke-linejoin="round"
-  />
-</svg>
-`;
-
-const userArrowIcon = L.divIcon({
-  className: "",
-  html: myLocationSVG,
-  iconSize: [40, 40],
-  iconAnchor: [20, 20], // 중심 기준
+// 🔵 내 위치 동그라미 아이콘 (카카오맵 스타일)
+const userDotIcon = L.divIcon({
+  className: "user-dot",
+  html: `
+    <div style="
+      width: 18px;
+      height: 18px;
+      background: #1a73e8;
+      border-radius: 50%;
+      border: 3px solid white;
+      box-shadow: 0 0 10px rgba(26,115,232,0.8);
+    "></div>
+  `,
+  iconSize: [18, 18],
+  iconAnchor: [9, 9],
 });
+
 
 function updateUserMarkerHeading() {
   // 🔹 우선순위: GPS 이동 방향 → 나침반 방향
@@ -1036,10 +1035,9 @@ function locateMe() {
 
       if (!userMarker) {
         userMarker = L.marker([userLat, userLng], {
-          icon: userArrowIcon,
-          rotationAngle: lastHeading ?? 0,
-          rotationOrigin: "center center",
-        }).addTo(map);
+  icon: userDotIcon,
+}).addTo(map);
+
       } else {
         userMarker.setLatLng([userLat, userLng]);
       }
