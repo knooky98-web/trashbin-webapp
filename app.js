@@ -374,30 +374,64 @@ const markerCluster = L.markerClusterGroup({
 map.addLayer(markerCluster);
 
 /* ---------------------- 우측 상단 나침반 컨트롤 ---------------------- */
+/* ---------------------- 우측 상단 나침반 컨트롤 ---------------------- */
 function createCompassControl() {
   const compassControl = L.control({ position: "topright" });
 
   compassControl.onAdd = function () {
     const div = L.DomUtil.create("div", "compass-control");
-    div.style.width = "50px";
-    div.style.height = "50px";
-    div.style.borderRadius = "50%";
-    div.style.background = "transparent";
-    div.style.boxShadow = "none";
-    div.style.display = "flex";
-    div.style.alignItems = "center";
-    div.style.justifyContent = "center";
+
+    // 기본 스타일은 CSS에서 하고, 여기서는 크기·클릭 방지만 살짝
+    div.style.width = "52px";
+    div.style.height = "52px";
     div.style.cursor = "default";
 
     div.innerHTML = `
-      <svg viewBox="0 0 100 100" width="36" height="36">
-        <circle cx="50" cy="50" r="45" fill="#ffffff" stroke="#ccc" stroke-width="3"/>
-        <text x="50" y="18" text-anchor="middle" font-size="14" fill="red">N</text>
-        <text x="50" y="90" text-anchor="middle" font-size="14" fill="blue">S</text>
-        <text x="88" y="54" text-anchor="middle" font-size="12" fill="#555">E</text>
-        <text x="12" y="54" text-anchor="middle" font-size="12" fill="#555">W</text>
-        <polygon points="50,22 58,42 42,42" fill="red"/>
-        <polygon points="50,78 58,58 42,58" fill="blue"/>
+      <svg viewBox="0 0 100 100" width="40" height="40">
+        <!-- 바깥 글라스 + 테두리 -->
+        <defs>
+          <radialGradient id="compassGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#1f2937" stop-opacity="1" />
+            <stop offset="100%" stop-color="#020617" stop-opacity="0.95" />
+          </radialGradient>
+        </defs>
+
+        <!-- 바깥 유리 원 -->
+<circle
+  class="compass-circle-outer"
+  cx="50"
+  cy="50"
+  r="46"
+/>
+
+<!-- 내부 점선 -->
+<circle
+  class="compass-circle-inner"
+  cx="50"
+  cy="50"
+  r="32"
+/>
+
+
+        <!-- 방향 문자 -->
+        <text x="50" y="17" text-anchor="middle" class="compass-label-main">N</text>
+        <text x="50" y="93" text-anchor="middle" class="compass-label-sub">S</text>
+        <text x="87" y="53" text-anchor="middle" class="compass-label-sub">E</text>
+        <text x="13" y="53" text-anchor="middle" class="compass-label-sub">W</text>
+
+        <!-- 북쪽 화살표 -->
+        <polygon
+          class="compass-arrow"
+          points="50,20 59,45 50,40 41,45"
+        />
+
+        <!-- 중앙 점 -->
+        <circle
+          cx="50"
+          cy="50"
+          r="6"
+          class="compass-center"
+        />
       </svg>
     `;
 
