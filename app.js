@@ -227,6 +227,9 @@ function updateUserMarkerHeading() {
 }
 
 /* ---------------------- 나침반 ---------------------- */
+// 🔥 나침반 회전 스무딩용
+let lastCompassHeading = null;
+
 function handleOrientation(event) {
   let heading = null;
 
@@ -239,7 +242,7 @@ function handleOrientation(event) {
   }
   // 🔹 안드로이드 / 기타 (alpha)
   else if (typeof event.alpha === "number" && !isNaN(event.alpha)) {
-    // 화면 회전 기준이 달라서 보통 360 - alpha 사용
+    // 기기 기준 각도 → 나침반 기준으로 변환
     heading = 360 - event.alpha;
   }
 
@@ -250,28 +253,21 @@ function handleOrientation(event) {
 
   // 🔒 너무 자주 오는 이벤트는 무시 (80ms 이내)
   const now = Date.now();
-  if (now - lastCompassTs < 80) {
-    return;
-  }
+  if (now - lastCompassTs < 80) return;
   lastCompassTs = now;
 
-  // 🔧 스무딩: 이전 각도 기준으로 조금씩만 따라가기
+  // 🔧 스무딩: 항상 "가까운 쪽"으로만 조금씩 따라가기
   if (lastCompassHeading === null) {
     lastCompassHeading = heading;
   } else {
-    // 항상 최단 경로(-180~180) 기준으로 회전
     let diff = heading - lastCompassHeading;
+
+    // -180 ~ 180 사이로 보정해서 긴쪽 회전 방지
     if (diff > 180) diff -= 360;
     if (diff < -180) diff += 360;
 
-    // 🔇 2도 이내 작은 흔들림은 무시
-    if (Math.abs(diff) < 2) {
-      return;
-    }
-
-    // 한 번에 너무 많이 돌지 않게 제한
-    const maxStep = 10;          // 한 번에 최대 10도
-    let step = diff * 0.25;      // 25%만 따라가기 (부드럽게)
+    const maxStep = 10; // 한 번에 최대 10도
+    let step = diff;
 
     if (step > maxStep) step = maxStep;
     if (step < -maxStep) step = -maxStep;
@@ -279,15 +275,19 @@ function handleOrientation(event) {
     lastCompassHeading = normalizeHeading(lastCompassHeading + step);
   }
 
-  // 전역 나침반 각도도 저장 → 내 위치 회전에 사용
+  // 👉 내 위치 아이콘에서 쓸 실제 방향 값
   compassHeading = lastCompassHeading;
 
-  // 🔹 나침반 UI 회전
+  // 👉 화면에 보이는 나침반은 "반대 방향"으로 돌려야
+  // 항상 N 글자가 실제 북쪽을 가리킴
+  const rotateDeg = -lastCompassHeading;
+
   if (compassSvgEl) {
-    compassSvgEl.style.transform = `rotate(${lastCompassHeading}deg)`;
+    compassSvgEl.style.transform = `rotate(${rotateDeg}deg)`;
     compassSvgEl.style.transformOrigin = "50% 50%";
   }
 }
+
 
 function initCompass() {
   if (compassStarted) return; // 중복 등록 방지
