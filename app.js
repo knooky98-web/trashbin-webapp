@@ -238,11 +238,11 @@ function handleOrientation(event) {
   ) {
     heading = event.webkitCompassHeading; // 0~360, 북쪽 기준
   }
-  // 🔹 안드로이드 / 기타 (alpha)
-  else if (typeof event.alpha === "number" && !isNaN(event.alpha)) {
-    // 기기 기준 각도 → 나침반 기준으로 변환
-    heading = 360 - event.alpha;
-  }
+ // 🔹 안드로이드 / 기타 (alpha)
+else if (typeof event.alpha === "number" && !isNaN(event.alpha)) {
+  // 👉 그냥 alpha 그대로 사용 (추가 반전 없이)
+  heading = event.alpha;
+}
 
   if (heading === null) return;
 
