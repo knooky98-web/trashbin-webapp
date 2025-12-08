@@ -61,6 +61,7 @@ let compassStarted = false;   // 나침반 이벤트 중복 등록 방지
 let lastCompassTs = 0;        // 마지막 나침반 이벤트 시각(ms)
 // 🔥 나침반 회전 스무딩용
 let lastCompassHeading = null;
+
 /* 방향 보정 유틸 */
 function normalizeHeading(deg) {
   let h = deg % 360;
@@ -158,8 +159,8 @@ function hideLoading() {
   loadingOverlayEl.style.display = "none";
 }
 
-/* ---------------------- 내 위치 화살표 아이콘 ---------------------- */
-// 🔵 내 위치 동그라미 아이콘 (카카오맵 스타일)
+/* ---------------------- 내 위치 아이콘 (동그라미) ---------------------- */
+// 🔵 내 위치 동그라미 아이콘 (카카오맵 느낌)
 const userDotIcon = L.divIcon({
   className: "user-dot",
   html: `
@@ -176,7 +177,7 @@ const userDotIcon = L.divIcon({
   iconAnchor: [9, 9],
 });
 
-
+/* 내 위치 화살표/동그라미 회전 (방향 표시) */
 function updateUserMarkerHeading() {
   // 🔹 우선순위: GPS 이동 방향 → 나침반 방향
   let heading = null;
@@ -217,7 +218,7 @@ function updateUserMarkerHeading() {
 
   const finalHeading = lastHeading;
 
-  // 🔺 내 위치 화살표 회전
+  // 🔺 내 위치 아이콘 회전 (동그라미라 사실 티는 거의 안 나지만 유지)
   if (userMarker && typeof userMarker.setRotationAngle === "function") {
     userMarker.setRotationAngle(finalHeading);
   } else if (userMarker && userMarker._icon) {
@@ -244,7 +245,7 @@ function handleOrientation(event) {
 
   if (heading === null) return;
 
-  // 정규화 (0~360)
+  // 0~360 정규화
   heading = normalizeHeading(heading);
 
   // 🔒 너무 자주 오는 이벤트는 무시 (80ms 이내)
@@ -263,7 +264,7 @@ function handleOrientation(event) {
     if (diff > 180) diff -= 360;
     if (diff < -180) diff += 360;
 
-    // 🔇 2도 이내의 작은 흔들림은 무시
+    // 🔇 2도 이내 작은 흔들림은 무시
     if (Math.abs(diff) < 2) {
       return;
     }
@@ -278,15 +279,14 @@ function handleOrientation(event) {
     lastCompassHeading = normalizeHeading(lastCompassHeading + step);
   }
 
+  // 전역 나침반 각도도 저장 → 내 위치 회전에 사용
+  compassHeading = lastCompassHeading;
+
   // 🔹 나침반 UI 회전
   if (compassSvgEl) {
     compassSvgEl.style.transform = `rotate(${lastCompassHeading}deg)`;
     compassSvgEl.style.transformOrigin = "50% 50%";
   }
-}
-
-  // 🔹 내 위치 화살표도 나침반 방향 반영
-  updateUserMarkerHeading();
 }
 
 function initCompass() {
@@ -414,7 +414,6 @@ const markerCluster = L.markerClusterGroup({
 map.addLayer(markerCluster);
 
 /* ---------------------- 우측 상단 나침반 컨트롤 ---------------------- */
-/* ---------------------- 우측 상단 나침반 컨트롤 ---------------------- */
 function createCompassControl() {
   const compassControl = L.control({ position: "topright" });
 
@@ -428,41 +427,44 @@ function createCompassControl() {
 
     div.innerHTML = `
       <svg viewBox="0 0 100 100" width="40" height="40">
-        <!-- 바깥 글라스 + 테두리 -->
         <defs>
           <radialGradient id="compassGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#1f2937" stop-opacity="1" />
-            <stop offset="100%" stop-color="#020617" stop-opacity="0.95" />
+            <stop offset="0%" stop-color="#ffffff" stop-opacity="1" />
+            <stop offset="100%" stop-color="#e5e7eb" stop-opacity="0.95" />
           </radialGradient>
         </defs>
 
         <!-- 바깥 유리 원 -->
-<circle
-  class="compass-circle-outer"
-  cx="50"
-  cy="50"
-  r="46"
-/>
+        <circle
+          cx="50"
+          cy="50"
+          r="46"
+          fill="url(#compassGlow)"
+          stroke="#cbd5f5"
+          stroke-width="2"
+        />
 
-<!-- 내부 점선 -->
-<circle
-  class="compass-circle-inner"
-  cx="50"
-  cy="50"
-  r="32"
-/>
-
+        <!-- 내부 점선 -->
+        <circle
+          cx="50"
+          cy="50"
+          r="32"
+          fill="none"
+          stroke="rgba(148,163,184,0.5)"
+          stroke-width="1.5"
+          stroke-dasharray="4 4"
+        />
 
         <!-- 방향 문자 -->
-        <text x="50" y="17" text-anchor="middle" class="compass-label-main">N</text>
-        <text x="50" y="93" text-anchor="middle" class="compass-label-sub">S</text>
-        <text x="87" y="53" text-anchor="middle" class="compass-label-sub">E</text>
-        <text x="13" y="53" text-anchor="middle" class="compass-label-sub">W</text>
+        <text x="50" y="17" text-anchor="middle" font-size="14" fill="#111827">N</text>
+        <text x="50" y="93" text-anchor="middle" font-size="14" fill="#6b7280">S</text>
+        <text x="87" y="53" text-anchor="middle" font-size="12" fill="#6b7280">E</text>
+        <text x="13" y="53" text-anchor="middle" font-size="12" fill="#6b7280">W</text>
 
         <!-- 북쪽 화살표 -->
         <polygon
-          class="compass-arrow"
           points="50,20 59,45 50,40 41,45"
+          fill="#111827"
         />
 
         <!-- 중앙 점 -->
@@ -470,7 +472,7 @@ function createCompassControl() {
           cx="50"
           cy="50"
           r="6"
-          class="compass-center"
+          fill="#111827"
         />
       </svg>
     `;
@@ -485,6 +487,7 @@ function createCompassControl() {
 }
 
 createCompassControl();
+
 
 /* ---------------------- TYPE & ICON ---------------------- */
 const PURPLE_ICON_URL =
