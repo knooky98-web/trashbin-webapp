@@ -240,8 +240,8 @@ function handleOrientation(event) {
   }
   // 🔹 안드로이드 / 기타 (alpha)
   else if (typeof event.alpha === "number" && !isNaN(event.alpha)) {
-    // 기기 기준 각도 → 나침반 기준으로 변환
-    heading = 360 - event.alpha;
+    // 👉 안드로이드는 alpha 그대로 사용 (추가 반전 X)
+    heading = event.alpha;
   }
 
   if (heading === null) return;
@@ -249,57 +249,39 @@ function handleOrientation(event) {
   // 0~360 정규화
   heading = normalizeHeading(heading);
 
+  // 🔒 너무 자주 오는 이벤트는 무시 (80ms 이내)
   const now = Date.now();
-  const dt = now - lastCompassTs;
-
-  // 🔒 너무 자주 오는 이벤트(60ms 이내)는 무시 → 떨림 제거용
-  if (dt < 60) {
-    return;
-  }
+  if (now - lastCompassTs < 80) return;
   lastCompassTs = now;
 
-  // 🔥 급발진(센서 미친 값) 필터
-  if (lastCompassHeading != null) {
-    // 항상 -180 ~ 180 사이의 "가장 가까운 차이"로 계산
-    let rawDiff = ((heading - lastCompassHeading + 540) % 360) - 180;
-
-    // ✅ 조건:
-    // - 변화량이 100도 이상으로 아주 크고
-    // - 시간 간격도 150ms 이하로 너무 짧으면
-    //   → 센서가 튄 값이라고 보고 이 이벤트는 무시
-    if (Math.abs(rawDiff) > 100 && dt < 150) {
-      // 급발진으로 판단 → 이번 값은 사용 안 함
-      return;
-    }
-  }
-
-  // 🔧 스무딩: 항상 "가까운 쪽"으로 조금씩만 따라가기
+  // 🔧 스무딩: 항상 "가까운 쪽"으로만 조금씩 따라가기
   if (lastCompassHeading == null) {
     lastCompassHeading = heading;
   } else {
+    // ✅ 항상 -180 ~ 180 사이로 보정 → 긴 쪽으로 350도 도는 문제 방지
     let diff = ((heading - lastCompassHeading + 540) % 360) - 180;
 
-    // 한 번에 너무 많이 돌지 않게 제한
-    let step = diff * 0.4; // 40%만 따라가기
-    const maxStep = 8;     // 한 번에 최대 8도
+    const maxStep = 8;   // 한 번에 최대 8도
+    diff *= 0.4;         // 40%만 따라가기 (부드럽게)
 
-    if (step > maxStep) step = maxStep;
-    if (step < -maxStep) step = -maxStep;
+    if (diff > maxStep) diff = maxStep;
+    if (diff < -maxStep) diff = -maxStep;
 
-    lastCompassHeading = normalizeHeading(lastCompassHeading + step);
+    lastCompassHeading = normalizeHeading(lastCompassHeading + diff);
   }
 
-  // 👉 내 위치 아이콘에서 쓸 실제 방향 값
+  // 👉 내 위치 방향값으로도 보관(동그라미라 티는 안 나지만 유지)
   compassHeading = lastCompassHeading;
 
-  // 👉 화면에 보이는 나침반: N 글자가 항상 북쪽을 향하게 하려면 반대로 회전
-  const rotateDeg = -lastCompassHeading;
+  // 👉 화면 나침반: 폰 회전 방향과 같은 방향으로 회전
+  const rotateDeg = lastCompassHeading;
 
   if (compassSvgEl) {
     compassSvgEl.style.transform = `rotate(${rotateDeg}deg)`;
     compassSvgEl.style.transformOrigin = "50% 50%";
   }
 }
+
 
 
 function initCompass() {
