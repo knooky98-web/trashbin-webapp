@@ -67,9 +67,10 @@ function normalizeHeading(deg) {
   return h;
 }
 
+// 🔧 위치 정확도 기준 (이제 “무시”용이 아니라 heading 판정에만 사용)
+const MIN_ACCURACY = 80; // m, 이보다 안 좋으면 방향(heading)만 무시
 
-// 🔧 위치 정확도 개선용 전역
-const MIN_ACCURACY = 50; // m, 이보다 안 좋으면 위치 업데이트 무시
+// 🔧 위치 보정용 최근 샘플
 let recentPositions = []; // 최근 위치 샘플들 (보정용)
 const RECENT_POS_LIMIT = 5; // 최대 5개까지 평균
 
@@ -176,15 +177,19 @@ const userArrowIcon = L.divIcon({
   iconAnchor: [20, 20], // 중심 기준
 });
 
-
-
 function updateUserMarkerHeading() {
-  // 🔹 이동 방향(GPS heading)이 없으면 방향 업데이트 안 함
-  if (geoHeading === null || isNaN(geoHeading)) {
-    return;
+  // 🔹 우선순위: GPS 이동 방향 → 나침반 방향
+  let heading = null;
+
+  if (geoHeading !== null && !isNaN(geoHeading)) {
+    heading = geoHeading;
+  } else if (compassHeading !== null && !isNaN(compassHeading)) {
+    heading = compassHeading;
+  } else {
+    return; // 사용할 각도 없음
   }
 
-  let heading = normalizeHeading(geoHeading);
+  heading = normalizeHeading(heading);
 
   if (lastHeading === null) {
     // 첫 값은 그대로 사용
@@ -220,9 +225,6 @@ function updateUserMarkerHeading() {
   }
 }
 
-
-
-
 /* ---------------------- 나침반 ---------------------- */
 function handleOrientation(event) {
   let heading = null;
@@ -235,16 +237,18 @@ function handleOrientation(event) {
 
   if (heading === null) return;
 
-  // 🔹 나침반 동그라미 UI만 돌림 (화살표는 건드리지 않음)
+  const norm = normalizeHeading(heading);
+  compassHeading = norm; // 🔹 전역 나침반 방향 업데이트
+
+  // 🔹 나침반 동그라미 UI 회전
   if (compassSvgEl) {
-    const h = normalizeHeading(heading);
-    compassSvgEl.style.transform = `rotate(${h}deg)`;
+    compassSvgEl.style.transform = `rotate(${norm}deg)`;
     compassSvgEl.style.transformOrigin = "50% 50%";
   }
+
+  // 🔹 내 위치 화살표도 나침반 방향 반영
+  updateUserMarkerHeading();
 }
-
-
-
 
 function initCompass() {
   if (compassStarted) return; // 중복 등록 방지
@@ -898,6 +902,7 @@ function updateNearbyBins(lat, lng) {
 
   const sorted = filtered
     .map((b) => ({
+
       bin: b,
       distance: getDistanceMeters(baseLat, baseLng, b.lat, b.lng),
     }))
@@ -989,11 +994,11 @@ function locateMe() {
       const rawLng = p.coords.longitude;
       const acc = p.coords.accuracy || 9999;
 
-      if (acc > MIN_ACCURACY && userLat !== null && userLng !== null) {
-        console.log("정확도 나쁨, 위치 무시:", acc, "m");
-        return;
-      }
+      // ❌ 예전: 정확도 나쁘면 위치 업데이트까지 무시
+      // if (acc > MIN_ACCURACY && userLat !== null && userLng !== null) { ... }
+      // 👉 이제는 "위치"는 항상 업데이트하고, 방향(heading) 판단에만 사용
 
+      // 🔹 최근 위치 리스트에 추가해서 평균으로 스무딩
       recentPositions.push({ lat: rawLat, lng: rawLng });
       if (recentPositions.length > RECENT_POS_LIMIT) {
         recentPositions.shift();
@@ -1010,25 +1015,24 @@ function locateMe() {
       userLat = avg.lat / recentPositions.length;
       userLng = avg.lng / recentPositions.length;
 
-           const heading = p.coords.heading;
+      const heading = p.coords.heading;
       const speed = p.coords.speed;
 
       // 🔒 방향은 "꽤 확실히 이동 중"일 때만 사용
       // - heading 값 실제로 있고
-      // - 속도 1.2m/s 이상 (빠르게 걷기 이상)
+      // - 속도 0.5m/s 이상 (천천히 걷기 이상)
       // - 정확도도 어느 정도 괜찮을 때만
       if (
         heading !== null &&
         !isNaN(heading) &&
         speed !== null &&
-        speed > 1.2 &&      // ← 기존 0.5 → 1.2로 상향
-        acc <= 40           // ← 정확도도 40m 이하일 때만
+        speed > 0.5 &&      // ← 기준 완화 (1.2 → 0.5)
+        acc <= MIN_ACCURACY // ← 80m 이내면 방향 사용
       ) {
         geoHeading = heading;
       } else {
         geoHeading = null;
       }
-
 
       if (!userMarker) {
         userMarker = L.marker([userLat, userLng], {
