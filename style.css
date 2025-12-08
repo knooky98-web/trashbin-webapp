@@ -215,7 +215,7 @@ body {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: -32vh; /* 기본 숨겨진 상태: 화면 높이의 40% 만큼 아래로 */
+  bottom: -32vh; /* 닫혔을 때 살짝 보이는 정도는 그대로 둠 */
   background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(16px);
   border-top-left-radius: 24px;
@@ -224,16 +224,17 @@ body {
   box-shadow: 0 -10px 30px rgba(15, 23, 42, 0.25);
   z-index: 9998;
   transition: bottom 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
-  max-height: 50vh; /* 시트 자체 최대 높이 (기존 60vh → 40vh) */
+  max-height: 65vh; /* ✅ 완전히 펼쳤을 때 화면 65%까지 올라오게 */
 }
 
-/* 시트 콘텐츠를 세로로 쌓고, 리스트가 남는 공간을 차지하도록 */
+/* 시트 콘텐츠 영역 */
 #list-panel {
   height: auto;
-  max-height: 40vh;
+  max-height: 65vh;  /* ✅ 시트 높이랑 맞춰줌 */
   display: flex;
   flex-direction: column;
 }
+
 
 /* 드래그 핸들: 실제 드래그 영역을 넓게 */
 .sheet-handle {
@@ -399,13 +400,14 @@ body {
 @media (max-height: 640px) {
   .bottom-sheet {
     bottom: -38vh;
-    max-height: 50vh;
+    max-height: 55vh;  /* ✅ 작은 화면에서는 55% 정도 */
   }
 
   #list-panel {
-    max-height: 50vh;
+    max-height: 55vh;
   }
 }
+
 
 /* ====================================
    MINI INFO CARD (마커 클릭)
@@ -1213,3 +1215,9 @@ body {
 body {
   outline: 3px solid magenta !important;
 }
+
+/* 리스트 시트가 열려 있을 때, 미니 카드를 시트 위로 올리기 */
+body.sheet-open #mini-info {
+  bottom: 190px;   /* 👉 시트 높이에 맞춰 적당히 위로 (필요하면 170~220 사이로 조정) */
+}
+
