@@ -59,7 +59,8 @@ let geoWatchId = null;        // watchPosition ID
 let hasInitialFix = false;    // 첫 위치를 잡았는지 여부
 let compassStarted = false;   // 나침반 이벤트 중복 등록 방지
 let lastCompassTs = 0;        // 마지막 나침반 이벤트 시각(ms)
-
+// 🔥 나침반 회전 스무딩용
+let lastCompassHeading = null;
 /* 방향 보정 유틸 */
 function normalizeHeading(deg) {
   let h = deg % 360;
@@ -228,22 +229,61 @@ function updateUserMarkerHeading() {
 function handleOrientation(event) {
   let heading = null;
 
-  if (typeof event.webkitCompassHeading === "number" && !isNaN(event.webkitCompassHeading)) {
-    heading = event.webkitCompassHeading;
-  } else if (typeof event.alpha === "number" && !isNaN(event.alpha)) {
+  // 🔹 iOS (Safari)
+  if (
+    typeof event.webkitCompassHeading === "number" &&
+    !isNaN(event.webkitCompassHeading)
+  ) {
+    heading = event.webkitCompassHeading; // 0~360, 북쪽 기준
+  }
+  // 🔹 안드로이드 / 기타 (alpha)
+  else if (typeof event.alpha === "number" && !isNaN(event.alpha)) {
+    // 화면 회전 기준이 달라서 보통 360 - alpha 사용
     heading = 360 - event.alpha;
   }
 
   if (heading === null) return;
 
-  const norm = normalizeHeading(heading);
-  compassHeading = norm; // 🔹 전역 나침반 방향 업데이트
+  // 정규화 (0~360)
+  heading = normalizeHeading(heading);
 
-  // 🔹 나침반 동그라미 UI 회전
+  // 🔒 너무 자주 오는 이벤트는 무시 (80ms 이내)
+  const now = Date.now();
+  if (now - lastCompassTs < 80) {
+    return;
+  }
+  lastCompassTs = now;
+
+  // 🔧 스무딩: 이전 각도 기준으로 조금씩만 따라가기
+  if (lastCompassHeading === null) {
+    lastCompassHeading = heading;
+  } else {
+    // 항상 최단 경로(-180~180) 기준으로 회전
+    let diff = heading - lastCompassHeading;
+    if (diff > 180) diff -= 360;
+    if (diff < -180) diff += 360;
+
+    // 🔇 2도 이내의 작은 흔들림은 무시
+    if (Math.abs(diff) < 2) {
+      return;
+    }
+
+    // 한 번에 너무 많이 돌지 않게 제한
+    const maxStep = 10;          // 한 번에 최대 10도
+    let step = diff * 0.25;      // 25%만 따라가기 (부드럽게)
+
+    if (step > maxStep) step = maxStep;
+    if (step < -maxStep) step = -maxStep;
+
+    lastCompassHeading = normalizeHeading(lastCompassHeading + step);
+  }
+
+  // 🔹 나침반 UI 회전
   if (compassSvgEl) {
-    compassSvgEl.style.transform = `rotate(${norm}deg)`;
+    compassSvgEl.style.transform = `rotate(${lastCompassHeading}deg)`;
     compassSvgEl.style.transformOrigin = "50% 50%";
   }
+}
 
   // 🔹 내 위치 화살표도 나침반 방향 반영
   updateUserMarkerHeading();
