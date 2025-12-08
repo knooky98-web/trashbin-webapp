@@ -274,8 +274,8 @@ function handleOrientation(event) {
   // 👉 내 위치 아이콘에서 쓸 실제 방향 값 (원은 티 안 나지만 일단 유지)
   compassHeading = lastCompassHeading;
 
-  // 👉 화면에 보이는 나침반: N 글자가 항상 북쪽을 향하게 하려면 반대로 회전
-  const rotateDeg = -lastCompassHeading;
+   // 👉 화면에 보이는 나침반: 기기 회전 방향과 같은 방향으로 회전
+  const rotateDeg = lastCompassHeading;
 
   if (compassSvgEl) {
     compassSvgEl.style.transform = `rotate(${rotateDeg}deg)`;
