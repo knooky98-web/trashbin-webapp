@@ -227,8 +227,6 @@ function updateUserMarkerHeading() {
 }
 
 /* ---------------------- 나침반 ---------------------- */
-// 🔥 나침반 회전 스무딩용
-let lastCompassHeading = null;
 
 function handleOrientation(event) {
   let heading = null;
@@ -257,29 +255,26 @@ function handleOrientation(event) {
   lastCompassTs = now;
 
   // 🔧 스무딩: 항상 "가까운 쪽"으로만 조금씩 따라가기
-  if (lastCompassHeading === null) {
+  if (lastCompassHeading == null) {
     lastCompassHeading = heading;
   } else {
-    let diff = heading - lastCompassHeading;
+    // ✅ 항상 -180 ~ 180 사이로 보정 → 긴 쪽으로 350도 도는 문제 방지
+    let diff = ((heading - lastCompassHeading + 540) % 360) - 180;
 
-    // -180 ~ 180 사이로 보정해서 긴쪽 회전 방지
-    if (diff > 180) diff -= 360;
-    if (diff < -180) diff += 360;
+    // 한 번에 너무 많이 돌지 않게 제한
+    const maxStep = 8;      // 한 번에 최대 8도
+    diff *= 0.4;            // 40%만 따라가기 (부드럽게)
 
-    const maxStep = 10; // 한 번에 최대 10도
-    let step = diff;
+    if (diff > maxStep) diff = maxStep;
+    if (diff < -maxStep) diff = -maxStep;
 
-    if (step > maxStep) step = maxStep;
-    if (step < -maxStep) step = -maxStep;
-
-    lastCompassHeading = normalizeHeading(lastCompassHeading + step);
+    lastCompassHeading = normalizeHeading(lastCompassHeading + diff);
   }
 
-  // 👉 내 위치 아이콘에서 쓸 실제 방향 값
+  // 👉 내 위치 아이콘에서 쓸 실제 방향 값 (원은 티 안 나지만 일단 유지)
   compassHeading = lastCompassHeading;
 
-  // 👉 화면에 보이는 나침반은 "반대 방향"으로 돌려야
-  // 항상 N 글자가 실제 북쪽을 가리킴
+  // 👉 화면에 보이는 나침반: N 글자가 항상 북쪽을 향하게 하려면 반대로 회전
   const rotateDeg = -lastCompassHeading;
 
   if (compassSvgEl) {
