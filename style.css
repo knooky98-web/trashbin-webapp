@@ -12,7 +12,8 @@ body {
 /* 모바일 브라우저 주소창 포함해서 꽉 채우기 */
 body {
   min-height: 100dvh;        /* 최신 브라우저용 실제 화면 높이 */
-  background: #000;          /* 깔끔하게 */
+  background: #ffffff;       /* ✅ 기본은 라이트: 흰색 */
+  color: #111827;
   overflow: hidden;          /* 기본 스크롤 금지 (지도 앱 느낌) */
   overflow-x: hidden;        /* 가로 스크롤 완전 차단 */
 }
@@ -192,12 +193,6 @@ body {
 #floating-locate:active {
   transform: scale(0.96);
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-}
-
-@media (prefers-color-scheme: dark) {
-  #floating-locate {
-    background: #222;
-  }
 }
 
 /* 작은 화면(시트 50vh일 때) 보정 */
@@ -596,43 +591,50 @@ body {
   border: none !important;
 }
 
+
 /* ====================================
-   DARK MODE (앱 토글 기준)
+   🔥 DARK MODE (앱 토글 기준)
    :root[data-theme="dark"] 를 app.js에서 제어함
+   html 태그에 data-theme="dark" 가 붙으면 아래 스타일이 덮어씀
 ==================================== */
+
+/* 배경 / 기본 텍스트 */
 :root[data-theme="dark"] body {
-  background: #000;
+  background: #000000;
   color: #f5f5f5;
 }
 
+/* 검색창 */
 :root[data-theme="dark"] #searchInput {
   background: #2c2c2e;
   color: #f5f5f5;
 }
 
+/* 자동완성 */
 :root[data-theme="dark"] #search-suggest {
   background: #1c1c1e;
 }
-
 :root[data-theme="dark"] #search-suggest li:hover {
   background: #2c2c2e;
 }
 
+/* 리스트 시트 */
 :root[data-theme="dark"] .bottom-sheet {
   background: #1c1c1e;
   color: #f5f5f5;
 }
 
+/* 미니 카드 */
 :root[data-theme="dark"] #mini-info {
   background: #2c2c2e;
   color: #f5f5f5;
 }
-
 :root[data-theme="dark"] .mini-addr,
 :root[data-theme="dark"] .mini-meta {
-  color: #aaa;
+  color: #aaaaaa;
 }
 
+/* 버튼 */
 :root[data-theme="dark"] .direction-btn,
 :root[data-theme="dark"] .list-direction-btn {
   background: #0a84ff;
@@ -640,10 +642,39 @@ body {
   color: #fff;
 }
 
+/* 내 위치 버튼 / 햄버거 버튼 살짝 어둡게 */
+:root[data-theme="dark"] #floating-locate {
+  background: #222222;
+}
+:root[data-theme="dark"] #settings-btn {
+  background: #2c2c2e;
+}
 
-/* =====================
+/* 설정 패널 / 앱정보 패널 */
+:root[data-theme="dark"] #side-panel,
+:root[data-theme="dark"] #appinfo-panel {
+  background: #111827;
+  color: #e5e7eb;
+}
+:root[data-theme="dark"] #side-panel-body,
+:root[data-theme="dark"] #side-panel-body p,
+:root[data-theme="dark"] .side-section-title,
+:root[data-theme="dark"] .toggle-label,
+:root[data-theme="dark"] .map-style-section label,
+:root[data-theme="dark"] .map-style-section label span {
+  color: #e5e7eb !important;
+}
+
+/* 문의 모달 / 첫 방문 팝업 카드도 살짝 어둡게 */
+:root[data-theme="dark"] #locate-hint-popup .popup-card,
+:root[data-theme="dark"] #inquiry-modal {
+  background: #111827;
+  color: #e5e7eb;
+}
+
+/* ====================================
    첫 방문 안내 팝업
-===================== */
+==================================== */
 #locate-hint-popup {
   position: fixed;
   inset: 0;
@@ -1192,38 +1223,17 @@ body {
   display: none !important;
 }
 
+/* 나침반 위치 */
 .leaflet-top.leaflet-right .compass-control {
   top: 95px !important;   /* 검색창 + 타입 필터 높이만큼 내려오기 */
   right: 10px !important;
 }
-/* =========================
-   설정 패널 글자 가독성 강화 (옵션 A)
-========================= */
-
-/* 설정 패널 안의 대부분 텍스트를 진한 회색으로 */
-#side-panel,
-#side-panel-body,
-#side-panel-body p,
-.side-section-title,
-.toggle-label,
-.map-style-section label,
-.map-style-section label span {
-  color: #333 !important;
-}
-
-body {
-  outline: 3px solid magenta !important;
-}
 
 /* 리스트 시트가 열렸을 때, 미니 카드를 시트 위로 띄우기 (반응형) */
 body.sheet-open #mini-info {
-  bottom: 25vh !important;
+  bottom: 20vh !important;
 }
 
 #mini-info {
   bottom: 8vh !important;
-}
-
-body.sheet-open #mini-info {
-  bottom: 20vh !important;
 }
