@@ -1343,11 +1343,6 @@ window.addEventListener("DOMContentLoaded", () => {
         e.stopPropagation();
         toggleSheet();
       });
-      listHandle.addEventListener("touchend", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        toggleSheet();
-      });
     }
 
     // 🔹 🔥 여기 있던 listPanel.addEventListener("click"/"touchend") 블록은 삭제!
@@ -1886,3 +1881,4 @@ async function updateBinLocation(binId, newLat, newLng) {
     console.error("업데이트 실패:", err);
   }
 }
+
