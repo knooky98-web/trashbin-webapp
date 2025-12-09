@@ -1256,4 +1256,27 @@ body {
   overscroll-behavior: contain;   /* 이 영역 밖으로 끌리는 것 방지 */
 }
 
+/* 🔥 목록 카드: 터치 범위 넓게 */
+.nearby-item {
+  position: relative;
+  padding: 14px 18px;     /* ← 상하 패딩 늘려서 터치 영역 확대 */
+  min-height: 68px;       /* ← 카드 자체 최소 높이 확보 */
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+}
+
+/* 카드 안 텍스트는 클릭 이벤트를 li로 보내기 위해 pointer-events 제거 */
+.nearby-item .nearby-header,
+.nearby-item .addr,
+.nearby-item .info {
+  pointer-events: none;
+}
+
+/* 버튼은 그대로 눌리도록 다시 활성화 */
+.nearby-item .list-direction-btn {
+  pointer-events: auto;
+}
+
 
