@@ -133,9 +133,9 @@ body {
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  padding: 0;                 /* 바깥 여백 제거 */
-  background: transparent;    /* 흰 배경 제거 */
-  border: none;               /* 흰 테두리 제거 */
+  padding: 0;
+  background: transparent;
+  border: none;
   font-size: 12px;
   color: #4b5563;
   cursor: pointer;
@@ -160,9 +160,8 @@ body {
 .type-pill input:checked + span {
   background: linear-gradient(135deg, #2563eb, #22c55e);
   color: #ffffff;
-  border: none;              /* 테두리도 제거 */
+  border: none;
 }
-
 
 /* ====================================
    FLOATING '내 위치' 버튼
@@ -225,32 +224,40 @@ body {
 /* 시트 콘텐츠 영역 */
 #list-panel {
   height: auto;
-  max-height: 50vh;  /* ✅ 시트 높이랑 맞춰줌 */
+  max-height: 50vh;
   display: flex;
   flex-direction: column;
 }
 
-
-/* 드래그 핸들: 실제 드래그 영역을 넓게 */
+/* 🔥 손잡이(바 + "펼치기" 텍스트) */
 .sheet-handle {
   width: 100%;
-  height: 120px;    /* 🔥 터치 박스 넓힘 */
+  padding: 10px 0 14px;
   display: flex;
+  flex-direction: column;     /* 위에 바, 아래 텍스트 */
   align-items: center;
   justify-content: center;
-  cursor: grab;
-  touch-action: none;    /* ✅ 이 줄 추가: 브라우저 제스처(스크롤/새로고침) 막기 */
+  gap: 4px;
+  cursor: pointer;
+  touch-action: manipulation; /* 브라우저 제스처 최소화 */
 }
 
-.sheet-handle::before {
-  content: "";
+/* 회색 바 */
+.sheet-handle .handle-bar {
   width: 40px;
   height: 4px;
   border-radius: 999px;
-  background: #e5e7eb;
+  background: #d1d5db;
 }
 
-
+/* "펼치기 ▼" / "접기 ▲" 텍스트 */
+.sheet-handle .handle-label {
+  font-size: 12px;
+  color: #6b7280;
+  opacity: 0.75;
+  user-select: none;
+  pointer-events: none; /* 텍스트는 클릭 안 먹고 전체 핸들이 클릭되게 */
+}
 
 #list-panel h3 {
   margin: 0 0 10px;
@@ -290,13 +297,15 @@ body {
   list-style: none;
   padding: 0;
   margin: 6px 0 0;
-  flex: 1 1 auto;                     /* 남는 공간 모두 차지 */
-  min-height: 0;                      /* flex 컨테이너 안에서 스크롤 가능하게 */
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
 }
 
 .nearby-item {
-  padding: 10px 14px;
+  position: relative;
+  padding: 14px 18px;     /* 터치 영역 넓게 */
+  min-height: 68px;
   border-bottom: 1px solid #e5e7eb;
   display: flex;
   flex-direction: column;
@@ -395,11 +404,23 @@ body {
   filter: brightness(1.05);
 }
 
+/* 카드 안 텍스트는 클릭 이벤트를 li로 보내기 위해 pointer-events 제거 */
+.nearby-item .nearby-header,
+.nearby-item .addr,
+.nearby-item .info {
+  pointer-events: none;
+}
+
+/* 버튼은 그대로 눌리도록 다시 활성화 */
+.nearby-item .list-direction-btn {
+  pointer-events: auto;
+}
+
 /* 키가 더 작은 기기에서(예: 640px 이하) 시트 높이 조금 더 */
 @media (max-height: 640px) {
   .bottom-sheet {
     bottom: -28vh;
-    max-height: 55vh;  /* ✅ 작은 화면에서는 55% 정도 */
+    max-height: 55vh;
   }
 
   #list-panel {
@@ -407,14 +428,13 @@ body {
   }
 }
 
-
 /* ====================================
    MINI INFO CARD (마커 클릭)
 ==================================== */
 #mini-info {
   position: fixed;
   left: 50%;
-  bottom: 80px;
+  bottom: 8vh !important;
   transform: translateX(-50%) translateY(120%);
   width: 92%;
   max-width: 420px;
@@ -487,19 +507,20 @@ body {
   flex: 1;
 }
 
+/* 리스트 시트가 열렸을 때, 미니 카드를 시트 위로 띄우기 */
+body.sheet-open #mini-info {
+  bottom: 20vh !important;
+}
+
 /* ====================================
    나침반 (우측 상단 컨트롤)
 ==================================== */
-/* =============================
-   나침반 세련된 밝은 스타일 (Glass)
-============================= */
 .compass-control {
   position: relative;
   width: 54px !important;
   height: 54px !important;
-
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.65); /* 밝은 유리 */
+  background: rgba(255, 255, 255, 0.65);
   box-shadow:
     0 4px 12px rgba(0,0,0,0.15),
     0 0 0 1px rgba(200,200,200,0.5);
@@ -508,7 +529,6 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-
   margin-top: 50px;
   margin-right: 8px;
 }
@@ -517,47 +537,10 @@ body {
   transition: transform 0.15s ease-out;
 }
 
-/* 방향 문자 */
-.compass-label-main {
-  fill: #1e40af;  /* 진한 파랑 (N) */
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.compass-label-sub {
-  fill: #374151;
-  font-size: 10px;
-  font-weight: 600;
-}
-
-/* 중앙 점 */
-.compass-center {
-  fill: white;
-  stroke: #1d4ed8;
-  stroke-width: 2;
-}
-
-/* 화살표 */
-.compass-arrow {
-  fill: #1d4ed8;               
-  stroke: rgba(255,255,255,0.9);
-  stroke-width: 2;
-  stroke-linejoin: round;
-}
-
-/* 바깥 원 */
-.compass-circle-outer {
-  stroke: rgba(120,120,120,0.4);
-  stroke-width: 2;
-  fill: rgba(255,255,255,0.3);
-}
-
-/* 내부 점선 원 */
-.compass-circle-inner {
-  stroke: rgba(0,0,0,0.25);
-  stroke-width: 1.3;
-  stroke-dasharray: 4 4;
-  fill: none;
+/* 나침반 위치 */
+.leaflet-top.leaflet-right .compass-control {
+  top: 95px !important;
+  right: 10px !important;
 }
 
 /* ====================================
@@ -595,14 +578,9 @@ body {
   border: none !important;
 }
 
-
 /* ====================================
    🔥 DARK MODE (앱 토글 기준)
-   :root[data-theme="dark"] 를 app.js에서 제어함
-   html 태그에 data-theme="dark" 가 붙으면 아래 스타일이 덮어씀
 ==================================== */
-
-/* 배경 / 기본 텍스트 */
 :root[data-theme="dark"] body {
   background: #000000;
   color: #f5f5f5;
@@ -652,7 +630,7 @@ body {
 }
 :root[data-theme="dark"] #settings-btn {
   background: #2c2c2e;
-   color: #ffffff;
+  color: #ffffff;
 }
 
 /* 설정 패널 / 앱정보 패널 */
@@ -731,14 +709,9 @@ body {
 #settings-btn {
   position: absolute;
   z-index: 10000;
-
-  /* 🔹 상단 안전영역 + 검색/필터 블록 아래로 살짝 내리기 */
   top: calc(env(safe-area-inset-top, 0px) + 120px);
-
-  /* 🔹 왼쪽에 고정 */
   left: 16px;
   transform: none;
-
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -752,7 +725,6 @@ body {
   cursor: pointer;
   color: #111827;
 }
-
 
 /* 왼쪽 슬라이드 패널 */
 #side-panel {
@@ -798,10 +770,8 @@ body {
 
 #side-panel-body {
   padding: 18px 18px calc(28px + env(safe-area-inset-bottom, 12px));
-  /*        좌우 ↑      아래쪽 패딩 크게 + 안전영역 고려    */
   overflow-y: auto;
 }
-
 
 /* 섹션 공통 */
 .side-section {
@@ -907,7 +877,7 @@ body {
 }
 
 /* ====================================
-   문의 팝업 (리디자인 버전)
+   문의 팝업
 ==================================== */
 
 #inquiry-backdrop {
@@ -932,19 +902,15 @@ body {
   top: 50%;
   transform: translate(-50%, -50%);
   z-index: 12000;
-
   max-width: 520px;
   width: calc(100% - 32px);
   box-sizing: border-box;
-
   background: #ffffff;
   border-radius: 20px;
   padding: 22px 24px 18px;
-
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.35);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui,
     sans-serif;
-
   opacity: 0;
   pointer-events: none;
   transition: 0.2s;
@@ -981,10 +947,8 @@ body {
 #inquiry-modal .inquiry-field select {
   width: 100%;
   box-sizing: border-box;
-
   font-size: 14px;
   padding: 10px 12px;
-
   border-radius: 12px;
   border: 1px solid #e5e7eb;
   background: #f9fafb;
@@ -1039,13 +1003,11 @@ body {
   min-width: 96px;
   font-size: 13px;
   font-weight: 600;
-
   border-radius: 0 999px 999px 0;
   border: 1px solid #1a73e8;
   background: #eef3ff;
   color: #1a73e8;
   cursor: pointer;
-
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1181,7 +1143,6 @@ body {
   overflow-y: auto;
 }
 
-
 .info-block {
   margin-bottom: 18px;
 }
@@ -1232,76 +1193,13 @@ body {
   display: none !important;
 }
 
-/* 나침반 위치 */
-.leaflet-top.leaflet-right .compass-control {
-  top: 95px !important;   /* 검색창 + 타입 필터 높이만큼 내려오기 */
-  right: 10px !important;
-}
-
-/* 리스트 시트가 열렸을 때, 미니 카드를 시트 위로 띄우기 (반응형) */
-body.sheet-open #mini-info {
-  bottom: 20vh !important;
-}
-
-#mini-info {
-  bottom: 8vh !important;
-}
+/* 브라우저 당겨서 새로고침 방지 */
 html,
 body {
-  overscroll-behavior: none;   /* 브라우저 당겨서 새로고침 방지 */
+  overscroll-behavior: none;
 }
 
 #list-panel,
 #nearby-list {
-  overscroll-behavior: contain;   /* 이 영역 밖으로 끌리는 것 방지 */
+  overscroll-behavior: contain;
 }
-
-/* 🔥 목록 카드: 터치 범위 넓게 */
-.nearby-item {
-  position: relative;
-  padding: 14px 18px;     /* ← 상하 패딩 늘려서 터치 영역 확대 */
-  min-height: 68px;       /* ← 카드 자체 최소 높이 확보 */
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  cursor: pointer;
-}
-
-/* 카드 안 텍스트는 클릭 이벤트를 li로 보내기 위해 pointer-events 제거 */
-.nearby-item .nearby-header,
-.nearby-item .addr,
-.nearby-item .info {
-  pointer-events: none;
-}
-
-/* 버튼은 그대로 눌리도록 다시 활성화 */
-.nearby-item .list-direction-btn {
-  pointer-events: auto;
-}
-
-/* 🔥 손잡이 디자인 + 안내문구 */
-#list-handle {
-  position: relative;
-  width: 80px;
-  height: 10px;
-  background: #d1d5db;       /* 연한 회색 */
-  border-radius: 6px;
-  margin: 14px auto 10px auto;
-  cursor: pointer;
-  touch-action: manipulation;
-}
-
-/* 작은 안내 텍스트 */
-#list-handle .handle-label {
-  position: absolute;
-  top: 14px;                 /* 바 바로 아래 */
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 12px;           /* 작고 자연스러운 크기 */
-  color: #6b7280;            /* 연한 회색 */
-  opacity: 0.65;             /* 너무 튀지 않게 */
-  pointer-events: none;      /* 클릭 이벤트 안 가도록 */
-  user-select: none;         /* 선택 방지 */
-}
-
-
