@@ -1279,4 +1279,29 @@ body {
   pointer-events: auto;
 }
 
+/* 🔥 손잡이 디자인 + 안내문구 */
+#list-handle {
+  position: relative;
+  width: 80px;
+  height: 10px;
+  background: #d1d5db;       /* 연한 회색 */
+  border-radius: 6px;
+  margin: 14px auto 10px auto;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+/* 작은 안내 텍스트 */
+#list-handle .handle-label {
+  position: absolute;
+  top: 14px;                 /* 바 바로 아래 */
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;           /* 작고 자연스러운 크기 */
+  color: #6b7280;            /* 연한 회색 */
+  opacity: 0.65;             /* 너무 튀지 않게 */
+  pointer-events: none;      /* 클릭 이벤트 안 가도록 */
+  user-select: none;         /* 선택 방지 */
+}
+
 
