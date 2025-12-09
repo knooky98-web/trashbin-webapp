@@ -1250,36 +1250,59 @@ window.addEventListener("DOMContentLoaded", () => {
 
   // 👉 처음에는 살짝만 보이도록 닫힌 상태로 세팅
   if (listPanel) {
-    const closedBottom = getSheetClosedBottom(listPanel);
-    listPanel.style.bottom = `${closedBottom}px`;
-    refreshSheetOpenClass();
+  const closedBottom = getSheetClosedBottom(listPanel);
+  listPanel.style.bottom = `${closedBottom}px`;
+  refreshSheetOpenClass();
 
-    const toggleSheet = () => {
-      const currentBottom = parseInt(
-        window.getComputedStyle(listPanel).bottom,
-        10
-      );
-      const closed = getSheetClosedBottom(listPanel);
+  const handleLabelEl = listHandle
+    ? listHandle.querySelector(".handle-label")
+    : null;
 
-      if (currentBottom <= closed + 5) {
-        listPanel.style.bottom = "0px";
-      } else {
-        listPanel.style.bottom = `${closed}px`;
-      }
-      refreshSheetOpenClass();
-      updateHandleLabel(); // ← 상태에 맞게 "펼치기/접기" 갱신
-    };
+  const updateHandleLabel = () => {
+    if (!handleLabelEl) return;
 
-    if (listHandle) {
-      listHandle.addEventListener("click", (e) => {
-        e.stopPropagation();
-        toggleSheet();
-      });
+    const btm = parseInt(window.getComputedStyle(listPanel).bottom, 10);
+    const closed = getSheetClosedBottom(listPanel);
+
+    // 거의 0px 근처면 = 펼쳐진 상태
+    if (btm >= -10) {
+      handleLabelEl.textContent = "접기 ▲";
+    } else {
+      handleLabelEl.textContent = "펼치기 ▼";
+    }
+  };
+
+  const toggleSheet = () => {
+    const currentBottom = parseInt(
+      window.getComputedStyle(listPanel).bottom,
+      10
+    );
+    const closed = getSheetClosedBottom(listPanel);
+
+    if (currentBottom <= closed + 5) {
+      listPanel.style.bottom = "0px";
+    } else {
+      listPanel.style.bottom = `${closed}px`;
     }
 
-    // 🔹 (형식상) 드래그 활성화 호출이지만 실제로는 아무 일도 안 함
-    enableDrag(listPanel, listHandle);
+    refreshSheetOpenClass();
+    updateHandleLabel();
+  };
+
+  // 초기 라벨 상태 세팅
+  updateHandleLabel();
+
+  if (listHandle) {
+    listHandle.addEventListener("click", (e) => {
+      e.stopPropagation();
+      toggleSheet();
+    });
   }
+
+  // 드래그는 비활성이라 그대로 둠
+  enableDrag(listPanel, listHandle);
+}
+
 
   // 🔒 리스트에서 아래로 끌 때 '브라우저 새로고침 제스처' 막기
   const nearbyList = document.getElementById("nearby-list");
@@ -1850,3 +1873,4 @@ async function updateBinLocation(binId, newLat, newLng) {
     console.error("업데이트 실패:", err);
   }
 }
+
