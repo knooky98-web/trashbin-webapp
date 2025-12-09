@@ -1203,3 +1203,96 @@ body {
 #nearby-list {
   overscroll-behavior: contain;
 }
+
+/* ====================================
+   🎨 DARK MODE 튜닝 (검색창 / 하단카드 / 설정패널)
+==================================== */
+
+/* 1) 검색창: 다크모드에서 진한 회색 박스 느낌 */
+:root[data-theme="dark"] #searchInput {
+  background: rgba(31, 41, 55, 0.96);  /* 어두운 회색 */
+  color: #f9fafb;
+  border: 1px solid rgba(75, 85, 99, 0.9);  /* 테두리 진하게 */
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65);
+}
+
+:root[data-theme="dark"] #searchInput::placeholder {
+  color: #9ca3af;
+}
+
+/* 2) 하단 카드(리스트 시트) */
+:root[data-theme="dark"] .bottom-sheet {
+  background: rgba(17, 24, 39, 0.98);    /* 거의 검정에 가까운 남색 */
+  color: #e5e7eb;
+  box-shadow: 0 -10px 32px rgba(0, 0, 0, 0.65);
+  border-top: 1px solid rgba(55, 65, 81, 0.9);
+}
+
+/* 리스트 안 텍스트들 색 조정 */
+:root[data-theme="dark"] #nearby-list .bin-name {
+  color: #f9fafb;
+}
+:root[data-theme="dark"] #nearby-list .addr,
+:root[data-theme="dark"] #nearby-list .info {
+  color: #9ca3af;
+}
+:root[data-theme="dark"] #nearby-list .distance {
+  color: #60a5fa;  /* 파란색 계열 */
+}
+
+/* 가장 가까운 카드 배경도 다크에 맞게 */
+:root[data-theme="dark"] .nearest-item {
+  background: radial-gradient(circle at top left, #1f2937, #020617);
+}
+
+/* 3) 설정 패널 / 앱 정보 패널 */
+:root[data-theme="dark"] #side-panel,
+:root[data-theme="dark"] #appinfo-panel {
+  background: #020617;        /* 아주 진한 남색/거의 검정 */
+  color: #e5e7eb;
+}
+
+:root[data-theme="dark"] #side-panel-header,
+:root[data-theme="dark"] #appinfo-header {
+  border-bottom: 1px solid #111827;
+}
+
+:root[data-theme="dark"] #side-panel-body,
+:root[data-theme="dark"] #appinfo-body {
+  color: #e5e7eb;
+}
+
+:root[data-theme="dark"] .side-section-title,
+:root[data-theme="dark"] .toggle-label,
+:root[data-theme="dark"] .map-style-section label span {
+  color: #e5e7eb !important;
+}
+
+/* 설정/앱정보 안 설명 텍스트 */
+:root[data-theme="dark"] #side-panel-body p,
+:root[data-theme="dark"] #appinfo-body p {
+  color: #9ca3af;
+}
+
+/* 설정 패널 안 버튼들 */
+:root[data-theme="dark"] .settings-primary-btn {
+  background: #2563eb;
+  color: #f9fafb;
+}
+
+:root[data-theme="dark"] .settings-secondary-btn {
+  background: #374151;
+  color: #e5e7eb;
+}
+
+/* 햄버거 버튼도 살짝 어둡게 */
+:root[data-theme="dark"] #settings-btn {
+  background: rgba(31, 41, 55, 0.95);
+  color: #f9fafb;
+}
+
+/* 플로팅 내 위치 버튼도 다크 스타일 */
+:root[data-theme="dark"] #floating-locate {
+  background: rgba(15, 23, 42, 0.96);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+}
