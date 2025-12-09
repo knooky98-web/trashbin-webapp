@@ -1224,3 +1224,7 @@ body.sheet-open #mini-info {
 #mini-info {
   bottom: 8vh !important;
 }
+
+body.sheet-open #mini-info {
+  bottom: 20vh !important;
+}
