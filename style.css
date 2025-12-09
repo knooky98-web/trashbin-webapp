@@ -239,7 +239,7 @@ body {
   align-items: center;
   justify-content: center;
   cursor: grab;
-  touch-action: none;    /* ✅ 이 줄 추가: 브라우저 제스처(스크롤/새로고침) 막기 */
+  touch-action: none;    /* ✅ 브라우저 제스처(스크롤/새로고침) 막기 */
 }
 
 .sheet-handle::before {
@@ -251,10 +251,6 @@ body {
 }
 
 
-
-#list-panel h3 {
-  margin: 0 0 10px;
-}
 
 /* ====================================
    LIST FILTERS
@@ -293,7 +289,7 @@ body {
   flex: 1 1 auto;                     /* 남는 공간 모두 차지 */
   min-height: 0;                      /* flex 컨테이너 안에서 스크롤 가능하게 */
   overflow-y: auto;
- -webkit-overflow-scrolling: touch;
+  -webkit-overflow-scrolling: touch;
 }
 
 .nearby-item {
@@ -491,9 +487,6 @@ body {
 /* ====================================
    나침반 (우측 상단 컨트롤)
 ==================================== */
-/* =============================
-   나침반 세련된 밝은 스타일 (Glass)
-============================= */
 .compass-control {
   position: relative;
   width: 54px !important;
@@ -516,49 +509,6 @@ body {
 
 .compass-control svg {
   transition: transform 0.15s ease-out;
-}
-
-/* 방향 문자 */
-.compass-label-main {
-  fill: #1e40af;  /* 진한 파랑 (N) */
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.compass-label-sub {
-  fill: #374151;
-  font-size: 10px;
-  font-weight: 600;
-}
-
-/* 중앙 점 */
-.compass-center {
-  fill: white;
-  stroke: #1d4ed8;
-  stroke-width: 2;
-}
-
-/* 화살표 */
-.compass-arrow {
-  fill: #1d4ed8;               
-  stroke: rgba(255,255,255,0.9);
-  stroke-width: 2;
-  stroke-linejoin: round;
-}
-
-/* 바깥 원 */
-.compass-circle-outer {
-  stroke: rgba(120,120,120,0.4);
-  stroke-width: 2;
-  fill: rgba(255,255,255,0.3);
-}
-
-/* 내부 점선 원 */
-.compass-circle-inner {
-  stroke: rgba(0,0,0,0.25);
-  stroke-width: 1.3;
-  stroke-dasharray: 4 4;
-  fill: none;
 }
 
 /* ====================================
@@ -596,86 +546,186 @@ body {
   border: none !important;
 }
 
-
 /* ====================================
    🔥 DARK MODE (앱 토글 기준)
    :root[data-theme="dark"] 를 app.js에서 제어함
-   html 태그에 data-theme="dark" 가 붙으면 아래 스타일이 덮어씀
 ==================================== */
 
-/* 배경 / 기본 텍스트 */
+/* 전체 배경 / 기본 텍스트 */
 :root[data-theme="dark"] body {
   background: #000000;
-  color: #f5f5f5;
+  color: #f9fafb;
 }
 
 /* 검색창 */
 :root[data-theme="dark"] #searchInput {
-  background: #2c2c2e;
-  color: #f5f5f5;
+  background: #1f2933;
+  color: #f9fafb;
+  border: 1px solid #4b5563;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+}
+
+:root[data-theme="dark"] #searchInput::placeholder {
+  color: #9ca3af;
+}
+
+/* 타입 필터 pill */
+:root[data-theme="dark"] .type-pill span {
+  background: rgba(31, 41, 55, 0.95);
+  border: 1px solid #4b5563;
+  color: #e5e7eb;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+}
+
+/* 체크된 pill – 살짝 네온 느낌 */
+:root[data-theme="dark"] .type-pill input:checked + span {
+  background: linear-gradient(135deg, #2563eb, #22c55e);
+  border: none;
+  color: #ffffff;
+}
+
+/* 리스트 시트(내 주변 쓰레기통 패널) */
+:root[data-theme="dark"] .bottom-sheet {
+  background: #020617;
+  color: #e5e7eb;
+  box-shadow: 0 -14px 40px rgba(0, 0, 0, 0.9);
+}
+
+/* 리스트 텍스트들 */
+:root[data-theme="dark"] #list-filters label,
+:root[data-theme="dark"] .checkbox-row {
+  color: #e5e7eb;
+}
+
+:root[data-theme="dark"] #districtFilter {
+  background: #020617;
+  color: #e5e7eb;
+  border-color: #4b5563;
+}
+
+:root[data-theme="dark"] .nearby-item {
+  border-bottom-color: #111827;
+}
+
+:root[data-theme="dark"] .nearby-item .addr,
+:root[data-theme="dark"] .nearby-item .info {
+  color: #9ca3af;
+}
+
+/* 가장 가까운 카드 배경 */
+:root[data-theme="dark"] .nearest-item {
+  background: linear-gradient(135deg, #0b1120, #022c22);
+}
+
+/* “가장 가까움” 뱃지 */
+:root[data-theme="dark"] .badge-nearest {
+  background: #0b1120;
+  color: #38bdf8;
+  border-color: #1f2937;
 }
 
 /* 자동완성 */
 :root[data-theme="dark"] #search-suggest {
-  background: #1c1c1e;
+  background: #020617;
 }
 :root[data-theme="dark"] #search-suggest li:hover {
-  background: #2c2c2e;
-}
-
-/* 리스트 시트 */
-:root[data-theme="dark"] .bottom-sheet {
-  background: #1c1c1e;
-  color: #f5f5f5;
-}
-
-/* 미니 카드 */
-:root[data-theme="dark"] #mini-info {
-  background: #2c2c2e;
-  color: #f5f5f5;
-}
-:root[data-theme="dark"] .mini-addr,
-:root[data-theme="dark"] .mini-meta {
-  color: #aaaaaa;
-}
-
-/* 버튼 */
-:root[data-theme="dark"] .direction-btn,
-:root[data-theme="dark"] .list-direction-btn {
-  background: #0a84ff;
-  border-color: #0a84ff;
-  color: #fff;
-}
-
-/* 내 위치 버튼 / 햄버거 버튼 살짝 어둡게 */
-:root[data-theme="dark"] #floating-locate {
-  background: #222222;
-}
-:root[data-theme="dark"] #settings-btn {
-  background: #2c2c2e;
-   color: #ffffff;
-}
-
-/* 설정 패널 / 앱정보 패널 */
-:root[data-theme="dark"] #side-panel,
-:root[data-theme="dark"] #appinfo-panel {
   background: #111827;
+}
+
+/* 미니 정보 카드 */
+:root[data-theme="dark"] #mini-info {
+  background: #020617;
   color: #e5e7eb;
 }
+:root[data-theme="dark"] .mini-addr,
+:root[data-theme="dark"] .mini-meta,
+:root[data-theme="dark"] .mini-note {
+  color: #9ca3af;
+}
+
+/* 공통 버튼 (길찾기 등) */
+:root[data-theme="dark"] .direction-btn,
+:root[data-theme="dark"] .list-direction-btn {
+  background: linear-gradient(135deg, #0ea5e9, #2563eb);
+  color: #ffffff;
+  border: none;
+}
+
+/* 내 위치 버튼 / 햄버거 버튼 */
+:root[data-theme="dark"] #floating-locate,
+:root[data-theme="dark"] #settings-btn {
+  background: rgba(15, 23, 42, 0.96);
+  color: #f9fafb;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.9);
+}
+
+/* 나침반 컨트롤 */
+:root[data-theme="dark"] .compass-control {
+  background: rgba(15, 23, 42, 0.9);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(31, 41, 55, 0.9);
+}
+
+/* 설정 패널 / 앱 정보 패널 */
+:root[data-theme="dark"] #side-panel,
+:root[data-theme="dark"] #appinfo-panel {
+  background: #020617;
+  color: #e5e7eb;
+}
+
 :root[data-theme="dark"] #side-panel-body,
 :root[data-theme="dark"] #side-panel-body p,
 :root[data-theme="dark"] .side-section-title,
 :root[data-theme="dark"] .toggle-label,
 :root[data-theme="dark"] .map-style-section label,
-:root[data-theme="dark"] .map-style-section label span {
+:root[data-theme="dark"] .map-style-section label span,
+:root[data-theme="dark"] #appinfo-body,
+:root[data-theme="dark"] #appinfo-body p {
   color: #e5e7eb !important;
 }
 
-/* 문의 모달 / 첫 방문 팝업 카드도 살짝 어둡게 */
+/* 설정 패널 버튼들 */
+:root[data-theme="dark"] .settings-primary-btn {
+  background: #0ea5e9;
+}
+
+:root[data-theme="dark"] .settings-secondary-btn {
+  background: #111827;
+}
+
+/* 문의 모달 / 첫 방문 팝업 카드 */
 :root[data-theme="dark"] #locate-hint-popup .popup-card,
 :root[data-theme="dark"] #inquiry-modal {
+  background: #020617;
+  color: #e5e7eb;
+}
+
+:root[data-theme="dark"] #locate-hint-popup .popup-card p,
+:root[data-theme="dark"] #inquiry-modal .inquiry-field label {
+  color: #e5e7eb;
+}
+
+:root[data-theme="dark"] #inquiry-modal .inquiry-field input,
+:root[data-theme="dark"] #inquiry-modal .inquiry-field textarea,
+:root[data-theme="dark"] #inquiry-modal .inquiry-field select {
+  background: #020617;
+  border-color: #4b5563;
+  color: #e5e7eb;
+}
+
+/* 문의 모달 버튼 */
+:root[data-theme="dark"] #inquiry-cancel-btn {
   background: #111827;
   color: #e5e7eb;
+}
+:root[data-theme="dark"] #inquiry-submit-btn {
+  background: #0ea5e9;
+}
+
+/* 앱 정보 패널 내 링크 */
+:root[data-theme="dark"] #appinfo-body a {
+  color: #38bdf8;
 }
 
 /* ====================================
@@ -799,7 +849,6 @@ body {
 
 #side-panel-body {
   padding: 18px 18px calc(28px + env(safe-area-inset-bottom, 12px));
-  /*        좌우 ↑      아래쪽 패딩 크게 + 안전영역 고려    */
   overflow-y: auto;
 }
 
@@ -1247,7 +1296,8 @@ body.sheet-open #mini-info {
 #mini-info {
   bottom: 8vh !important;
 }
- html,
+
+html,
 body {
   overscroll-behavior: none;
 }
@@ -1256,7 +1306,6 @@ body {
 #nearby-list {
   overscroll-behavior: contain;
 }
-
 
 /* 🔥 목록 카드: 터치 범위 넓게 */
 .nearby-item {
@@ -1280,6 +1329,7 @@ body {
 .nearby-item .list-direction-btn {
   pointer-events: auto;
 }
+
 /* 🔥 리스트 패널 손잡이를 크게 강조 */
 #list-handle {
   width: 80px;              /* 기존보다 훨씬 넓게 */
@@ -1300,10 +1350,10 @@ body {
   top: -10px;
   width: 120px;
   height: 30px;
-  /* 투명한 터치 큰 박스 */
-  background: transparent;
+  background: transparent;  /* 투명한 터치 큰 박스 */
   cursor: pointer;
 }
+
 /* 🔹 지도 위 미니 정보 카드 터치 영역 넓히기 */
 #mini-info .mini-header,
 #mini-info .mini-addr,
