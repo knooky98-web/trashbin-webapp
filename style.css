@@ -1246,4 +1246,14 @@ body.sheet-open #mini-info {
 #mini-info {
   bottom: 8vh !important;
 }
+html,
+body {
+  overscroll-behavior: none;   /* 브라우저 당겨서 새로고침 방지 */
+}
+
+#list-panel,
+#nearby-list {
+  overscroll-behavior: contain;   /* 이 영역 밖으로 끌리는 것 방지 */
+}
+
 
