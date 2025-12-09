@@ -1360,3 +1360,71 @@ body {
 #mini-info .mini-meta {
   padding: 4px 0;
 }
+
+/* ====================================
+   🔆 LIGHT MODE 더 밝게 보정용 오버라이드
+   (style.css 맨 아래에 붙여넣기)
+==================================== */
+
+/* 전체 배경 더 새하얗게 */
+body {
+  background: #ffffff;
+  color: #111827;
+}
+
+/* 검색창 완전 흰색 + 그림자 약하게 */
+#searchInput {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.12);
+}
+
+/* 타입 필터 pill도 더 하얗게 */
+#type-filter-box .type-pill span {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+}
+
+/* 리스트 바텀시트를 완전 흰색 카드 느낌으로 */
+.bottom-sheet {
+  background: #ffffff;
+  box-shadow: 0 -6px 18px rgba(15, 23, 42, 0.12);
+  backdrop-filter: none;
+}
+
+/* 리스트 안 텍스트도 조금 더 진한 회색 */
+#list-filters label,
+.checkbox-row,
+.nearby-item .addr,
+.nearby-item .info {
+  color: #4b5563;
+}
+
+/* 설정 패널 / 앱정보 패널도 흰색 유지 */
+#side-panel,
+#appinfo-panel {
+  background: #ffffff;
+  color: #111827;
+}
+
+/* 설정 패널 설명 텍스트 색 살짝 진하게 */
+#side-panel-body p,
+#appinfo-body p {
+  color: #4b5563;
+}
+
+/* 내 위치 버튼 / 햄버거 버튼도 새하얀 플로팅 버튼 느낌 */
+#floating-locate,
+#settings-btn {
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18);
+  color: #111827;
+}
+
+/* 온보딩/문의 모달도 밝은 카드 느낌으로 */
+#locate-hint-popup .popup-card,
+#inquiry-modal {
+  background: #ffffff;
+  color: #111827;
+}
