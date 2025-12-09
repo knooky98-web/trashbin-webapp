@@ -1268,15 +1268,15 @@ function enableDrag(panel, handle) {
     refreshSheetOpenClass();
   };
 
-  // 🔹 손잡이에서도 드래그 시작 가능
+    // 🔹 손잡이 영역에서만 드래그 시작 가능
   if (handle) {
     handle.addEventListener("mousedown", onStart);
     handle.addEventListener("touchstart", onStart, { passive: false });
   }
 
-  // 🔹 패널 전체에서도 드래그 시작 가능 (리스트 영역은 제외)
-  panel.addEventListener("mousedown", onStart);
-  panel.addEventListener("touchstart", onStart, { passive: false });
+  // ❌ 패널 전체에서는 드래그 시작 안 함 (리스트 위부터만 적용)
+  // panel.addEventListener("mousedown", onStart);
+  // panel.addEventListener("touchstart", onStart, { passive: false });
 
   window.addEventListener("mousemove", onMove);
   window.addEventListener("touchmove", onMove, { passive: false });
@@ -1314,12 +1314,11 @@ window.addEventListener("DOMContentLoaded", () => {
   createFloatingLocateButton();
 
   // 👉 처음에는 살짝만 보이도록 닫힌 상태로 세팅
-  if (listPanel) {
+   if (listPanel) {
     const closedBottom = getSheetClosedBottom(listPanel);
     listPanel.style.bottom = `${closedBottom}px`;
     refreshSheetOpenClass();
 
-    // ✅ 시트를 열고/닫는 토글 함수
     const toggleSheet = () => {
       const currentBottom = parseInt(
         window.getComputedStyle(listPanel).bottom,
@@ -1327,17 +1326,14 @@ window.addEventListener("DOMContentLoaded", () => {
       );
       const closed = getSheetClosedBottom(listPanel);
 
-      // 현재가 거의 닫힌 상태면 → 완전 열기
       if (currentBottom <= closed + 5) {
         listPanel.style.bottom = "0px";
       } else {
-        // 열려 있으면 → 다시 닫힌 위치로
         listPanel.style.bottom = `${closed}px`;
       }
       refreshSheetOpenClass();
     };
 
-    // 🔹 손잡이 터치/클릭 시 토글
     if (listHandle) {
       listHandle.addEventListener("click", (e) => {
         e.stopPropagation();
@@ -1345,8 +1341,10 @@ window.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    // 🔹 🔥 여기 있던 listPanel.addEventListener("click"/"touchend") 블록은 삭제!
+    // 🔹 드래그로 시트 열고/닫기 (리스트 위, 손잡이부터 적용)
+    enableDrag(listPanel, listHandle);
   }
+
 
   // ✅ 문의 위치 입력칸은 항상 사용자가 직접 수정 가능하도록
   const inquiryLocationInput = document.getElementById("inquiry-location");
@@ -1881,4 +1879,5 @@ async function updateBinLocation(binId, newLat, newLng) {
     console.error("업데이트 실패:", err);
   }
 }
+
 
