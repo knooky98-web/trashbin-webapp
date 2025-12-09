@@ -215,7 +215,7 @@ body {
   backdrop-filter: blur(16px);
   border-top-left-radius: 24px;
   border-top-right-radius: 24px;
-  padding: 16px 20px 20px;
+  padding: 16px 20px calc(26px + env(safe-area-inset-bottom, 12px));
   box-shadow: 0 -10px 30px rgba(15, 23, 42, 0.25);
   z-index: 9998;
   transition: bottom 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
@@ -361,6 +361,7 @@ body {
 /* 리스트 내 안내 문구 */
 .empty-state {
   padding: 14px;
+  padding-bottom: 26px;
   font-size: 13px;
   color: #4b5563;
   line-height: 1.5;
@@ -648,6 +649,7 @@ body {
 }
 :root[data-theme="dark"] #settings-btn {
   background: #2c2c2e;
+   color: #ffffff;
 }
 
 /* 설정 패널 / 앱정보 패널 */
@@ -745,6 +747,7 @@ body {
   justify-content: center;
   font-size: 22px;
   cursor: pointer;
+  color: #111827;
 }
 
 
@@ -791,9 +794,11 @@ body {
 }
 
 #side-panel-body {
-  padding: 18px 18px 20px;
+  padding: 18px 18px calc(28px + env(safe-area-inset-bottom, 12px));
+  /*        좌우 ↑      아래쪽 패딩 크게 + 안전영역 고려    */
   overflow-y: auto;
 }
+
 
 /* 섹션 공통 */
 .side-section {
@@ -1169,9 +1174,10 @@ body {
 }
 
 #appinfo-body {
-  padding: 16px;
+  padding: 16px 16px calc(28px + env(safe-area-inset-bottom, 12px));
   overflow-y: auto;
 }
+
 
 .info-block {
   margin-bottom: 18px;
