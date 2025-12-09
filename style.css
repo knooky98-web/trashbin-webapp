@@ -1329,30 +1329,34 @@ body {
 .nearby-item .list-direction-btn {
   pointer-events: auto;
 }
-
-/* 🔥 리스트 패널 손잡이를 크게 강조 */
+/* 바텀시트 손잡이 — 깔끔한 스타일 */
 #list-handle {
-  width: 80px;              /* 기존보다 훨씬 넓게 */
-  height: 10px;             /* 두께 증가 */
-  background: #d1d5db;      /* 연한 회색 */
-  border-radius: 6px;
-  margin: 12px auto 10px auto;
+  position: relative;
+  width: 100%;
+  padding: 14px 0 10px 0;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background: transparent;     /* ✔ 검은 네모 사라짐 */
   cursor: pointer;
   touch-action: manipulation;
 }
 
-/* 🔥 손잡이 터치 영역을 넓혀서 누르기 쉽도록 */
 #list-handle::before {
   content: "";
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  top: -10px;
-  width: 120px;
-  height: 30px;
-  background: transparent;  /* 투명한 터치 큰 박스 */
-  cursor: pointer;
+  width: 80px;                 /* 길고 넓은 손잡이 */
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.2);   /* 연한 회색 막대 */
 }
+
+/* 다크모드일 때 손잡이 색 바뀌도록 */
+[data-theme="dark"] #list-handle::before {
+  background: rgba(255, 255, 255, 0.4);
+}
+
 
 /* 🔹 지도 위 미니 정보 카드 터치 영역 넓히기 */
 #mini-info .mini-header,
@@ -1473,4 +1477,5 @@ body {
   background: #d1d5db !important;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
+
 
