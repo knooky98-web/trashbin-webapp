@@ -234,12 +234,13 @@ body {
 /* 드래그 핸들: 실제 드래그 영역을 넓게 */
 .sheet-handle {
   width: 100%;
-  height: 24px;              /* 손가락으로 잡기 편한 높이 */
+  height: 40px;    /* 🔥 터치 박스 넓힘 */
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: grab;
 }
+
 
 .sheet-handle::before {
   content: "";
