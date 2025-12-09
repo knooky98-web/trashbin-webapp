@@ -230,7 +230,7 @@ body {
 /* 시트 콘텐츠 영역 */
 #list-panel {
   height: auto;
-  max-height: 65vh;  /* ✅ 시트 높이랑 맞춰줌 */
+  max-height: 50vh;  /* ✅ 시트 높이랑 맞춰줌 */
   display: flex;
   flex-direction: column;
 }
@@ -399,7 +399,7 @@ body {
 /* 키가 더 작은 기기에서(예: 640px 이하) 시트 높이 조금 더 */
 @media (max-height: 640px) {
   .bottom-sheet {
-    bottom: -38vh;
+    bottom: -28vh;
     max-height: 55vh;  /* ✅ 작은 화면에서는 55% 정도 */
   }
 
@@ -415,7 +415,7 @@ body {
 #mini-info {
   position: fixed;
   left: 50%;
-  bottom: 16px;
+  bottom: 80px;
   transform: translateX(-50%) translateY(120%);
   width: 92%;
   max-width: 420px;
@@ -1216,17 +1216,11 @@ body {
   outline: 3px solid magenta !important;
 }
 
-/* 리스트 시트가 열려 있을 때, 미니 카드를 시트 위로 올리기 */
+/* 리스트 시트가 열렸을 때, 미니 카드를 시트 위로 띄우기 (반응형) */
 body.sheet-open #mini-info {
-  bottom: 190px;   /* 👉 시트 높이에 맞춰 적당히 위로 (필요하면 170~220 사이로 조정) */
+  bottom: 25vh !important;
 }
 
-/* ===========================
-   화면 높이 테스트용 (임시)
-=========================== */
-@media (max-height: 640px) {
-  body {
-    outline: 3px solid lime !important;   /* 작은 화면이면 라임색 테두리 */
-  }
+#mini-info {
+  bottom: 8vh !important;
 }
-
