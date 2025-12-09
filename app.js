@@ -1207,6 +1207,7 @@ function openListPanel() {
 }
 
 /* ---------------------- DRAG SHEET ---------------------- */
+/* ---------------------- DRAG SHEET ---------------------- */
 function enableDrag(panel, handle) {
   if (!panel) return;
 
@@ -1214,10 +1215,10 @@ function enableDrag(panel, handle) {
   let startBottom = 0;
   let dragging = false;
 
-  // 🔹 이 영역에서 시작된 터치는 드래그 무시하고 스크롤만 가능하게
+  // 🔹 이 영역에서 시작된 터치는 드래그 무시하고 스크롤만
   function shouldIgnoreStart(target) {
     if (!target) return false;
-    // 리스트 영역 안쪽이면 드래그 시작 안 함 (스크롤용)
+    // 리스트 영역 안쪽이면 (nearby-list) → 시트 드래그 X, 스크롤만
     if (target.closest && target.closest("#nearby-list")) {
       return true;
     }
@@ -1231,6 +1232,9 @@ function enableDrag(panel, handle) {
     dragging = true;
     startY = e.touches ? e.touches[0].clientY : e.clientY;
     startBottom = parseInt(window.getComputedStyle(panel).bottom, 10);
+
+    // 드래그 시작 시 기본 스크롤 제스처 방지
+    if (e.cancelable) e.preventDefault();
   };
 
   const onMove = (e) => {
@@ -1240,7 +1244,7 @@ function enableDrag(panel, handle) {
     const diff = startY - currentY; // 위로 끌면 양수, 아래로 끌면 음수
     let newBottom = startBottom + diff;
 
-    const maxUp = 0;                          // 완전히 열린 상태
+    const maxUp = 0;                             // 완전 열린 상태
     const maxDown = getSheetClosedBottom(panel); // 살짝만 보이는 닫힌 상태
 
     if (newBottom > maxUp) newBottom = maxUp;
@@ -1248,41 +1252,50 @@ function enableDrag(panel, handle) {
 
     panel.style.bottom = `${newBottom}px`;
 
-    // 모바일에서 화면 흔들리는 거 방지
     if (e.cancelable) e.preventDefault();
   };
 
-  const onEnd = () => {
+  const onEnd = (e) => {
     if (!dragging) return;
     dragging = false;
+
+    if (e && e.cancelable) e.preventDefault();
+    if (e && e.stopPropagation) e.stopPropagation();
 
     const currentBottom = parseInt(window.getComputedStyle(panel).bottom, 10);
     const closedBottom = getSheetClosedBottom(panel);
 
-    // 위로 많이 올렸으면 완전히 열기, 아니면 닫힌 상태로
-    if (currentBottom > closedBottom / 2) {
-      panel.style.bottom = "0px";
-    } else {
+    // 🔹 너무 살짝만 내렸을 때는 다시 "열린 상태"로 스냅
+    //    충분히 아래로 끌어야만 닫히도록 여유를 줌
+    const closeThreshold = closedBottom + 60; // 닫힌 위치 + 60px 근처까지 내려가면 닫힘
+
+    if (currentBottom <= closeThreshold) {
+      // 거의 닫힌 위치까지 내려갔다 → 닫기
       panel.style.bottom = `${closedBottom}px`;
+    } else {
+      // 그 외에는 다시 열기
+      panel.style.bottom = "0px";
     }
+
     refreshSheetOpenClass();
   };
 
-    // 🔹 손잡이 영역에서만 드래그 시작 가능
+  // 🔹 손잡이에서도 드래그 시작 가능
   if (handle) {
     handle.addEventListener("mousedown", onStart);
     handle.addEventListener("touchstart", onStart, { passive: false });
   }
 
-  // ❌ 패널 전체에서는 드래그 시작 안 함 (리스트 위부터만 적용)
-  // panel.addEventListener("mousedown", onStart);
-  // panel.addEventListener("touchstart", onStart, { passive: false });
+  // 🔹 패널 전체에서도 드래그 시작 가능 (nearby-list는 제외)
+  panel.addEventListener("mousedown", onStart);
+  panel.addEventListener("touchstart", onStart, { passive: false });
 
   window.addEventListener("mousemove", onMove);
   window.addEventListener("touchmove", onMove, { passive: false });
   window.addEventListener("mouseup", onEnd);
   window.addEventListener("touchend", onEnd);
 }
+
 
 /* ---------------------- FLOATING LOCATE BTN ---------------------- */
 function createFloatingLocateButton() {
@@ -1341,7 +1354,7 @@ window.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    // 🔹 드래그로 시트 열고/닫기 (리스트 위, 손잡이부터 적용)
+  // 🔹 드래그로 시트 열고/닫기 활성화
     enableDrag(listPanel, listHandle);
   }
 
