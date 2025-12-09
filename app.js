@@ -50,6 +50,9 @@ let routeOutline = null;
 // ✅ 경로 화살표 레이어 저장
 let routeArrows = null;
 
+// 🔥 바텀시트 드래그 직후 지도 클릭을 무시하기 위한 플래그
+let justDraggedSheet = false;
+
 // ✅ 내 위치 + 방향 화살표용 전역
 let userMarker = null;        // 내 위치 마커
 let geoHeading = null;        // GPS 이동 방향 (속도 있을 때만)
@@ -211,7 +214,7 @@ function updateUserMarkerHeading() {
     let step = diff * 0.3;    // 기본은 30%만 따라가기 (부드럽게)
 
     if (step > maxStep) step = maxStep;
-    if (step < -maxStep) step = -maxStep;
+    if (step < -MaxStep) step = -maxStep;
 
     lastHeading = normalizeHeading(lastHeading + step);
   }
@@ -296,8 +299,6 @@ function handleOrientation(event) {
     compassSvgEl.style.transformOrigin = "50% 50%";
   }
 }
-
-
 
 function initCompass() {
   if (compassStarted) return; // 중복 등록 방지
@@ -497,7 +498,6 @@ function createCompassControl() {
 }
 
 createCompassControl();
-
 
 /* ---------------------- TYPE & ICON ---------------------- */
 const PURPLE_ICON_URL =
@@ -988,7 +988,6 @@ function updateNearbyBins(lat, lng) {
 
   const sorted = filtered
     .map((b) => ({
-
       bin: b,
       distance: getDistanceMeters(baseLat, baseLng, b.lat, b.lng),
     }))
@@ -1080,10 +1079,6 @@ function locateMe() {
       const rawLng = p.coords.longitude;
       const acc = p.coords.accuracy || 9999;
 
-      // ❌ 예전: 정확도 나쁘면 위치 업데이트까지 무시
-      // if (acc > MIN_ACCURACY && userLat !== null && userLng !== null) { ... }
-      // 👉 이제는 "위치"는 항상 업데이트하고, 방향(heading) 판단에만 사용
-
       // 🔹 최근 위치 리스트에 추가해서 평균으로 스무딩
       recentPositions.push({ lat: rawLat, lng: rawLng });
       if (recentPositions.length > RECENT_POS_LIMIT) {
@@ -1122,9 +1117,8 @@ function locateMe() {
 
       if (!userMarker) {
         userMarker = L.marker([userLat, userLng], {
-  icon: userDotIcon,
-}).addTo(map);
-
+          icon: userDotIcon,
+        }).addTo(map);
       } else {
         userMarker.setLatLng([userLat, userLng]);
       }
@@ -1176,7 +1170,7 @@ function locateMe() {
 
 /* ---------------------- 바텀시트 닫힌 위치 계산 🔥 ---------------------- */
 function getSheetClosedBottom(panel) {
-  const peek = 100; 
+  const peek = 100;
   return -(panel.offsetHeight - peek);
 }
 
@@ -1207,34 +1201,20 @@ function openListPanel() {
 }
 
 /* ---------------------- DRAG SHEET ---------------------- */
-/* ---------------------- DRAG SHEET ---------------------- */
 function enableDrag(panel, handle) {
-  if (!panel) return;
+  if (!panel || !handle) return;
 
   let startY = 0;
   let startBottom = 0;
   let dragging = false;
 
-  // 🔹 이 영역에서 시작된 터치는 드래그 무시하고 스크롤만
-  function shouldIgnoreStart(target) {
-    if (!target) return false;
-    // 리스트 영역 안쪽이면 (nearby-list) → 시트 드래그 X, 스크롤만
-    if (target.closest && target.closest("#nearby-list")) {
-      return true;
-    }
-    return false;
-  }
-
   const onStart = (e) => {
-    const target = e.target;
-    if (shouldIgnoreStart(target)) return;
-
     dragging = true;
     startY = e.touches ? e.touches[0].clientY : e.clientY;
     startBottom = parseInt(window.getComputedStyle(panel).bottom, 10);
 
-    // 드래그 시작 시 기본 스크롤 제스처 방지
     if (e.cancelable) e.preventDefault();
+    if (e.stopPropagation) e.stopPropagation();
   };
 
   const onMove = (e) => {
@@ -1264,38 +1244,33 @@ function enableDrag(panel, handle) {
 
     const currentBottom = parseInt(window.getComputedStyle(panel).bottom, 10);
     const closedBottom = getSheetClosedBottom(panel);
+    const mid = closedBottom / 2; // 닫힌 위치와 열린 위치의 중간값 (음수)
 
-    // 🔹 너무 살짝만 내렸을 때는 다시 "열린 상태"로 스냅
-    //    충분히 아래로 끌어야만 닫히도록 여유를 줌
-    const closeThreshold = closedBottom + 60; // 닫힌 위치 + 60px 근처까지 내려가면 닫힘
-
-    if (currentBottom <= closeThreshold) {
-      // 거의 닫힌 위치까지 내려갔다 → 닫기
-      panel.style.bottom = `${closedBottom}px`;
-    } else {
-      // 그 외에는 다시 열기
+    // 🔹 중간 기준으로 위쪽이면 완전 열기, 아래쪽이면 닫기(peek)
+    if (currentBottom > mid) {
       panel.style.bottom = "0px";
+    } else {
+      panel.style.bottom = `${closedBottom}px`;
     }
 
     refreshSheetOpenClass();
+
+    // 🔥 드래그 직후 0.2초 동안은 map 클릭 무시
+    justDraggedSheet = true;
+    setTimeout(() => {
+      justDraggedSheet = false;
+    }, 200);
   };
 
-  // 🔹 손잡이에서도 드래그 시작 가능
-  if (handle) {
-    handle.addEventListener("mousedown", onStart);
-    handle.addEventListener("touchstart", onStart, { passive: false });
-  }
-
-  // 🔹 패널 전체에서도 드래그 시작 가능 (nearby-list는 제외)
-  panel.addEventListener("mousedown", onStart);
-  panel.addEventListener("touchstart", onStart, { passive: false });
+  // 드래그는 손잡이에서만 시작
+  handle.addEventListener("mousedown", onStart);
+  handle.addEventListener("touchstart", onStart, { passive: false });
 
   window.addEventListener("mousemove", onMove);
   window.addEventListener("touchmove", onMove, { passive: false });
   window.addEventListener("mouseup", onEnd);
   window.addEventListener("touchend", onEnd);
 }
-
 
 /* ---------------------- FLOATING LOCATE BTN ---------------------- */
 function createFloatingLocateButton() {
@@ -1327,7 +1302,7 @@ window.addEventListener("DOMContentLoaded", () => {
   createFloatingLocateButton();
 
   // 👉 처음에는 살짝만 보이도록 닫힌 상태로 세팅
-   if (listPanel) {
+  if (listPanel) {
     const closedBottom = getSheetClosedBottom(listPanel);
     listPanel.style.bottom = `${closedBottom}px`;
     refreshSheetOpenClass();
@@ -1354,10 +1329,9 @@ window.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-  // 🔹 드래그로 시트 열고/닫기 활성화
+    // 🔹 드래그로 시트 열고/닫기 활성화 (손잡이 기준)
     enableDrag(listPanel, listHandle);
   }
-
 
   // ✅ 문의 위치 입력칸은 항상 사용자가 직접 수정 가능하도록
   const inquiryLocationInput = document.getElementById("inquiry-location");
@@ -1773,6 +1747,12 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 
   map.on("click", () => {
+    // 🔥 방금 시트를 드래그해서 놓은 경우라면, 이 클릭은 무시
+    if (justDraggedSheet) {
+      justDraggedSheet = false;
+      return;
+    }
+
     const box = document.getElementById("search-suggest");
     if (box) {
       box.style.display = "none";
@@ -1892,5 +1872,3 @@ async function updateBinLocation(binId, newLat, newLng) {
     console.error("업데이트 실패:", err);
   }
 }
-
-
