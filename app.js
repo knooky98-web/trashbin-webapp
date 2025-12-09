@@ -1,5 +1,5 @@
 /* =====================================================
-   쓰레기통 웹앱 app.js
+   쓰레기통 웹앱 app.js (최종 정리본)
    - 마커 하이라이트
    - 중복 제거
    - 경로 표시 + 선 위 화살표
@@ -50,7 +50,7 @@ let routeOutline = null;
 // ✅ 경로 화살표 레이어 저장
 let routeArrows = null;
 
-// 🔥 바텀시트 드래그 직후 지도 클릭을 무시하기 위한 플래그
+// 🔥 바텀시트 드래그 직후 지도 클릭을 무시하기 위한 플래그 (지금은 드래그 X지만 남겨둠)
 let justDraggedSheet = false;
 
 // ✅ 내 위치 + 방향 화살표용 전역
@@ -84,7 +84,7 @@ let compassSvgEl = null;
 
 // ✅ 지도 테마/스타일 상태
 let currentTheme = "light"; // "light" | "dark"
-let currentStyle = "osm"; // "osm" | "carto" | "voyager"
+let currentStyle = "osm";   // "osm" | "carto" | "voyager"
 let tileLayer = null;
 
 // 🔄 로딩 오버레이용 전역
@@ -210,11 +210,11 @@ function updateUserMarkerHeading() {
     }
 
     // 🔧 한 번에 너무 많이 돌지 않도록 회전량 제한
-    const maxStep = 15;       // 한 번에 최대 15도만
-    let step = diff * 0.3;    // 기본은 30%만 따라가기 (부드럽게)
+    const maxStep = 15;    // 한 번에 최대 15도만
+    let step = diff * 0.3; // 기본은 30%만 따라가기 (부드럽게)
 
     if (step > maxStep) step = maxStep;
-    if (step < -MaxStep) step = -maxStep;
+    if (step < -maxStep) step = -maxStep;
 
     lastHeading = normalizeHeading(lastHeading + step);
   }
@@ -230,7 +230,6 @@ function updateUserMarkerHeading() {
 }
 
 /* ---------------------- 나침반 ---------------------- */
-
 function handleOrientation(event) {
   let heading = null;
 
@@ -431,7 +430,6 @@ function createCompassControl() {
   compassControl.onAdd = function () {
     const div = L.DomUtil.create("div", "compass-control");
 
-    // 기본 스타일은 CSS에서 하고, 여기서는 크기·클릭 방지만 살짝
     div.style.width = "52px";
     div.style.height = "52px";
     div.style.cursor = "default";
@@ -1100,15 +1098,12 @@ function locateMe() {
       const speed = p.coords.speed;
 
       // 🔒 방향은 "꽤 확실히 이동 중"일 때만 사용
-      // - heading 값 실제로 있고
-      // - 속도 0.5m/s 이상 (천천히 걷기 이상)
-      // - 정확도도 어느 정도 괜찮을 때만
       if (
         heading !== null &&
         !isNaN(heading) &&
         speed !== null &&
-        speed > 0.5 &&      // ← 기준 완화 (1.2 → 0.5)
-        acc <= MIN_ACCURACY // ← 80m 이내면 방향 사용
+        speed > 0.5 &&      // 천천히 걷기 이상
+        acc <= MIN_ACCURACY // 80m 이내면 방향 사용
       ) {
         geoHeading = heading;
       } else {
@@ -1170,7 +1165,7 @@ function locateMe() {
 
 /* ---------------------- 바텀시트 닫힌 위치 계산 🔥 ---------------------- */
 function getSheetClosedBottom(panel) {
-  const peek = 100;
+  const peek = 100; // 아래쪽으로 100px 정도만 보이게
   return -(panel.offsetHeight - peek);
 }
 
@@ -1200,10 +1195,28 @@ function openListPanel() {
   refreshSheetOpenClass();
 }
 
+/* ---------------------- 핸들 라벨(펼치기/접기) 업데이트 ---------------------- */
+function updateHandleLabel() {
+  const panel = document.getElementById("list-panel");
+  const label = document.querySelector("#list-handle .handle-label");
+  if (!panel || !label) return;
+
+  const bottom = parseInt(window.getComputedStyle(panel).bottom, 10);
+  const closedBottom = getSheetClosedBottom(panel);
+
+  if (bottom <= closedBottom + 5) {
+    // 거의 닫힌 상태
+    label.textContent = "펼치기 ▼";
+  } else {
+    // 열린 상태
+    label.textContent = "접기 ▲";
+  }
+}
+
 /* ---------------------- DRAG SHEET ---------------------- */
 /* ✅ 드래그 기능 완전히 비활성화 */
 function enableDrag(panel, handle) {
-  // 이제 드래그는 사용하지 않음
+  // 이제 드래그는 사용하지 않음 (모든 동작은 탭/클릭으로만)
 }
 
 /* ---------------------- FLOATING LOCATE BTN ---------------------- */
@@ -1254,6 +1267,7 @@ window.addEventListener("DOMContentLoaded", () => {
         listPanel.style.bottom = `${closed}px`;
       }
       refreshSheetOpenClass();
+      updateHandleLabel(); // ← 상태에 맞게 "펼치기/접기" 갱신
     };
 
     if (listHandle) {
@@ -1263,10 +1277,10 @@ window.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    // 🔹 드래그로 시트 열고/닫기 활성화 (손잡이 기준)
+    // 🔹 (형식상) 드래그 활성화 호출이지만 실제로는 아무 일도 안 함
     enableDrag(listPanel, listHandle);
   }
- /*  ⭐⭐⭐⭐ 바로 여기 ⭐⭐⭐⭐ */
+
   // 🔒 리스트에서 아래로 끌 때 '브라우저 새로고침 제스처' 막기
   const nearbyList = document.getElementById("nearby-list");
   if (nearbyList) {
@@ -1292,7 +1306,7 @@ window.addEventListener("DOMContentLoaded", () => {
       { passive: false }
     );
   }
-  /*  ⭐⭐⭐⭐ 여기까지 복붙 ⭐⭐⭐⭐ */
+
   // ✅ 문의 위치 입력칸은 항상 사용자가 직접 수정 가능하도록
   const inquiryLocationInput = document.getElementById("inquiry-location");
   if (inquiryLocationInput) {
@@ -1707,7 +1721,7 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 
   map.on("click", () => {
-    // 🔥 방금 시트를 드래그해서 놓은 경우라면, 이 클릭은 무시
+    // (이제 드래그는 없지만 플래그는 남겨둠)
     if (justDraggedSheet) {
       justDraggedSheet = false;
       return;
@@ -1724,11 +1738,15 @@ window.addEventListener("DOMContentLoaded", () => {
     if (listPanel) {
       listPanel.style.bottom = `${getSheetClosedBottom(listPanel)}px`;
       refreshSheetOpenClass();
+      updateHandleLabel();
     }
   });
 
   addBinsToMap();
   populateDistrictFilter();
+
+  // ⭐ 시작 상태에 맞게 "펼치기 ▼ / 접기 ▲" 텍스트 정리
+  updateHandleLabel();
 
   /* ---------- 온보딩 팝업 (2단계) ---------- */
   if (!locateHintShown) {
@@ -1832,5 +1850,3 @@ async function updateBinLocation(binId, newLat, newLng) {
     console.error("업데이트 실패:", err);
   }
 }
-
-
