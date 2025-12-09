@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.knooky.trashbin",
+        "sha256_cert_fingerprints": ["7B:E7:09:37:D4:D9:0E:4F:F9:8C:60:EB:D7:B9:4E:9C:7B:14:F8:56:D7:7C:E8:60:56:8C:BE:24:B2:41:50:E7"]
+      }
+    }]
