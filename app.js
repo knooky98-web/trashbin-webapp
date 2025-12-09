@@ -1266,7 +1266,33 @@ window.addEventListener("DOMContentLoaded", () => {
     // 🔹 드래그로 시트 열고/닫기 활성화 (손잡이 기준)
     enableDrag(listPanel, listHandle);
   }
+ /*  ⭐⭐⭐⭐ 바로 여기 ⭐⭐⭐⭐ */
+  // 🔒 리스트에서 아래로 끌 때 '브라우저 새로고침 제스처' 막기
+  const nearbyList = document.getElementById("nearby-list");
+  if (nearbyList) {
+    let startY = 0;
 
+    nearbyList.addEventListener(
+      "touchstart",
+      (e) => {
+        startY = e.touches[0].clientY;
+      },
+      { passive: false }
+    );
+
+    nearbyList.addEventListener(
+      "touchmove",
+      (e) => {
+        const currentY = e.touches[0].clientY;
+
+        if (nearbyList.scrollTop === 0 && currentY > startY) {
+          e.preventDefault();
+        }
+      },
+      { passive: false }
+    );
+  }
+  /*  ⭐⭐⭐⭐ 여기까지 복붙 ⭐⭐⭐⭐ */
   // ✅ 문의 위치 입력칸은 항상 사용자가 직접 수정 가능하도록
   const inquiryLocationInput = document.getElementById("inquiry-location");
   if (inquiryLocationInput) {
@@ -1806,4 +1832,5 @@ async function updateBinLocation(binId, newLat, newLng) {
     console.error("업데이트 실패:", err);
   }
 }
+
 
