@@ -239,6 +239,7 @@ body {
   align-items: center;
   justify-content: center;
   cursor: grab;
+  touch-action: none;    /* ✅ 이 줄 추가: 브라우저 제스처(스크롤/새로고침) 막기 */
 }
 
 .sheet-handle::before {
@@ -248,6 +249,7 @@ body {
   border-radius: 999px;
   background: #e5e7eb;
 }
+
 
 
 #list-panel h3 {
@@ -1244,4 +1246,5 @@ body.sheet-open #mini-info {
 #mini-info {
   bottom: 8vh !important;
 }
+
 
