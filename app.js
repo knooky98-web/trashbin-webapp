@@ -1201,75 +1201,9 @@ function openListPanel() {
 }
 
 /* ---------------------- DRAG SHEET ---------------------- */
+/* ✅ 드래그 기능 완전히 비활성화 */
 function enableDrag(panel, handle) {
-  if (!panel || !handle) return;
-
-  let startY = 0;
-  let startBottom = 0;
-  let dragging = false;
-
-  const onStart = (e) => {
-    dragging = true;
-    startY = e.touches ? e.touches[0].clientY : e.clientY;
-    startBottom = parseInt(window.getComputedStyle(panel).bottom, 10);
-
-    if (e.cancelable) e.preventDefault();
-    if (e.stopPropagation) e.stopPropagation();
-  };
-
-  const onMove = (e) => {
-    if (!dragging) return;
-
-    const currentY = e.touches ? e.touches[0].clientY : e.clientY;
-    const diff = startY - currentY; // 위로 끌면 양수, 아래로 끌면 음수
-    let newBottom = startBottom + diff;
-
-    const maxUp = 0;                             // 완전 열린 상태
-    const maxDown = getSheetClosedBottom(panel); // 살짝만 보이는 닫힌 상태
-
-    if (newBottom > maxUp) newBottom = maxUp;
-    if (newBottom < maxDown) newBottom = maxDown;
-
-    panel.style.bottom = `${newBottom}px`;
-
-    if (e.cancelable) e.preventDefault();
-  };
-
-  const onEnd = (e) => {
-    if (!dragging) return;
-    dragging = false;
-
-    if (e && e.cancelable) e.preventDefault();
-    if (e && e.stopPropagation) e.stopPropagation();
-
-    const currentBottom = parseInt(window.getComputedStyle(panel).bottom, 10);
-    const closedBottom = getSheetClosedBottom(panel);
-    const mid = closedBottom / 2; // 닫힌 위치와 열린 위치의 중간값 (음수)
-
-    // 🔹 중간 기준으로 위쪽이면 완전 열기, 아래쪽이면 닫기(peek)
-    if (currentBottom > mid) {
-      panel.style.bottom = "0px";
-    } else {
-      panel.style.bottom = `${closedBottom}px`;
-    }
-
-    refreshSheetOpenClass();
-
-    // 🔥 드래그 직후 0.2초 동안은 map 클릭 무시
-    justDraggedSheet = true;
-    setTimeout(() => {
-      justDraggedSheet = false;
-    }, 200);
-  };
-
-  // 드래그는 손잡이에서만 시작
-  handle.addEventListener("mousedown", onStart);
-  handle.addEventListener("touchstart", onStart, { passive: false });
-
-  window.addEventListener("mousemove", onMove);
-  window.addEventListener("touchmove", onMove, { passive: false });
-  window.addEventListener("mouseup", onEnd);
-  window.addEventListener("touchend", onEnd);
+  // 이제 드래그는 사용하지 않음
 }
 
 /* ---------------------- FLOATING LOCATE BTN ---------------------- */
@@ -1872,3 +1806,4 @@ async function updateBinLocation(binId, newLat, newLng) {
     console.error("업데이트 실패:", err);
   }
 }
+
