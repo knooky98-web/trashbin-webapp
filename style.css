@@ -597,50 +597,49 @@ body {
 }
 
 /* ====================================
-   DARK MODE (시스템 기본)
+   DARK MODE (앱 토글 기준)
+   :root[data-theme="dark"] 를 app.js에서 제어함
 ==================================== */
-@media (prefers-color-scheme: dark) {
-  html,
-  body {
-    background: #000;
-    color: #f5f5f5;
-  }
-
-  #searchInput {
-    background: #2c2c2e;
-    color: #f5f5f5;
-  }
-
-  #search-suggest {
-    background: #1c1c1e;
-  }
-
-  #search-suggest li:hover {
-    background: #2c2c2e;
-  }
-
-  .bottom-sheet {
-    background: #1c1c1e;
-    color: #f5f5f5;
-  }
-
-  #mini-info {
-    background: #2c2c2e;
-    color: #f5f5f5;
-  }
-
-  .mini-addr,
-  .mini-meta {
-    color: #aaa;
-  }
-
-  .direction-btn,
-  .list-direction-btn {
-    background: #0a84ff;
-    border-color: #0a84ff;
-    color: #fff;
-  }
+:root[data-theme="dark"] body {
+  background: #000;
+  color: #f5f5f5;
 }
+
+:root[data-theme="dark"] #searchInput {
+  background: #2c2c2e;
+  color: #f5f5f5;
+}
+
+:root[data-theme="dark"] #search-suggest {
+  background: #1c1c1e;
+}
+
+:root[data-theme="dark"] #search-suggest li:hover {
+  background: #2c2c2e;
+}
+
+:root[data-theme="dark"] .bottom-sheet {
+  background: #1c1c1e;
+  color: #f5f5f5;
+}
+
+:root[data-theme="dark"] #mini-info {
+  background: #2c2c2e;
+  color: #f5f5f5;
+}
+
+:root[data-theme="dark"] .mini-addr,
+:root[data-theme="dark"] .mini-meta {
+  color: #aaa;
+}
+
+:root[data-theme="dark"] .direction-btn,
+:root[data-theme="dark"] .list-direction-btn {
+  background: #0a84ff;
+  border-color: #0a84ff;
+  color: #fff;
+}
+
 
 /* =====================
    첫 방문 안내 팝업
