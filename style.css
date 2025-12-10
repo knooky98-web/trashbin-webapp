@@ -1531,4 +1531,45 @@ body {
   box-shadow: 0 1px 4px rgba(15, 23, 42, 0.6);
 }
 
+/* ============================
+   라이트 모드 강제 스타일
+============================ */
+[data-theme="light"] {
+  --panel-bg: #ffffff !important;
+  --panel-text: #111111 !important;
+  --card-bg: #ffffff !important;
+  --card-text: #111111 !important;
+  --search-bg: #f3f4f6 !important;
+  --search-text: #111111 !important;
+  --setting-bg: #ffffff !important;
+}
+
+/* 설정 패널 */
+[data-theme="light"] #settings-panel {
+  background: var(--setting-bg) !important;
+  color: var(--panel-text) !important;
+}
+
+/* 리스트(하단 카드) */
+[data-theme="light"] #list-panel {
+  background: var(--panel-bg) !important;
+  color: var(--panel-text) !important;
+}
+
+/* 검색창 */
+[data-theme="light"] #search-box,
+[data-theme="light"] #searchInput {
+  background: var(--search-bg) !important;
+  color: var(--search-text) !important;
+}
+
+/* 토글 버튼, 제목 등 */
+[data-theme="light"] label,
+[data-theme="light"] h2,
+[data-theme="light"] h3,
+[data-theme="light"] p,
+[data-theme="light"] span {
+  color: var(--panel-text) !important;
+}
+
 
