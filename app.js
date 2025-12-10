@@ -1567,7 +1567,7 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-   /* ---------- 화면 모드 & 지도 스타일 ---------- */
+    /* ---------- 화면 모드 & 지도 스타일 ---------- */
   const themeToggle = document.getElementById("themeToggle");
   if (themeToggle) {
     // ✅ OS 다크모드 감지 안 하고, 무조건 라이트로 시작
@@ -1592,6 +1592,7 @@ window.addEventListener("DOMContentLoaded", () => {
       refreshBaseLayer();
     });
   });
+
 
 
     themeToggle.addEventListener("change", () => {
@@ -1841,6 +1842,7 @@ async function updateBinLocation(binId, newLat, newLng) {
     console.error("업데이트 실패:", err);
   }
 }
+
 
 
 
