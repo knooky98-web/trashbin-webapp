@@ -346,7 +346,7 @@ if (!isNaN(savedLat) && !isNaN(savedLng)) {
   if (!isNaN(savedZoom) && savedZoom >= 11 && savedZoom <= 18) {
     initialZoom = savedZoom;
   } else {
-    initialZoom = 15;   // 저장된 줌이 이상하면 적당히 15로
+    initialZoom = 16;   // 저장된 줌이 이상하면 적당히 15로
   }
 }
 
@@ -1787,5 +1787,6 @@ async function updateBinLocation(binId, newLat, newLng) {
     console.error("업데이트 실패:", err);
   }
 }
+
 
 
