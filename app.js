@@ -214,7 +214,7 @@ function updateUserMarkerHeading() {
     let step = diff * 0.3;    // 기본은 30%만 따라가기 (부드럽게)
 
     if (step > maxStep) step = maxStep;
-    if (step < -MaxStep) step = -maxStep;
+    if (step < -maxStep) step = -maxStep;
 
     lastHeading = normalizeHeading(lastHeading + step);
   }
@@ -1838,6 +1838,7 @@ async function updateBinLocation(binId, newLat, newLng) {
     console.error("업데이트 실패:", err);
   }
 }
+
 
 
 
