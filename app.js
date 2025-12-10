@@ -1031,7 +1031,7 @@ function locateMe() {
   // 이미 watch 중이면 위치로 이동만 + 리스트 패널 열기
   if (geoWatchId !== null) {
     if (userLat != null && userLng != null) {
-      map.setView([userLat, userLng], 16);
+      map.setView([userLat, userLng], 17);
       openListPanel();
       updateNearbyBins(userLat, userLng);
     }
@@ -1787,4 +1787,5 @@ async function updateBinLocation(binId, newLat, newLng) {
     console.error("업데이트 실패:", err);
   }
 }
+
 
