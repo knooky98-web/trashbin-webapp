@@ -1567,7 +1567,8 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-     const themeToggle = document.getElementById("themeToggle");
+      /* ---------- 화면 모드 & 지도 스타일 ---------- */
+  const themeToggle = document.getElementById("themeToggle");
   if (themeToggle) {
     const prefersDark =
       window.matchMedia &&
@@ -1589,13 +1590,14 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-
-
-    themeToggle.addEventListener("change", () => {
-      currentTheme = themeToggle.checked ? "dark" : "light";
+  const styleRadios = document.querySelectorAll('input[name="mapStyle"]');
+  styleRadios.forEach((radio) => {
+    radio.addEventListener("change", () => {
+      if (!radio.checked) return;
+      currentStyle = radio.value;
       refreshBaseLayer();
     });
-  }
+  });
 
   const styleRadios = document.querySelectorAll('input[name="mapStyle"]');
   styleRadios.forEach((radio) => {
@@ -1838,6 +1840,7 @@ async function updateBinLocation(binId, newLat, newLng) {
     console.error("업데이트 실패:", err);
   }
 }
+
 
 
 
