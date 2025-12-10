@@ -1591,7 +1591,7 @@ window.addEventListener("DOMContentLoaded", () => {
       currentStyle = radio.value;
       refreshBaseLayer();
     });
-  });
+
 
 
 
@@ -1842,6 +1842,7 @@ async function updateBinLocation(binId, newLat, newLng) {
     console.error("업데이트 실패:", err);
   }
 }
+
 
 
 
