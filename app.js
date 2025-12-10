@@ -402,10 +402,14 @@ function getCurrentTileUrl() {
 
   return TILE_URLS.osm;
 }
-
 function refreshBaseLayer() {
   const url = getCurrentTileUrl();
+
+  // ✅ html + body 둘 다에 data-theme 넣기
   document.documentElement.setAttribute("data-theme", currentTheme);
+  if (document.body) {
+    document.body.setAttribute("data-theme", currentTheme);
+  }
 
   if (tileLayer) {
     map.removeLayer(tileLayer);
@@ -413,6 +417,7 @@ function refreshBaseLayer() {
 
   tileLayer = L.tileLayer(url, tileOptions).addTo(map);
 }
+
 
 refreshBaseLayer();
 
@@ -1825,6 +1830,7 @@ async function updateBinLocation(binId, newLat, newLng) {
     console.error("업데이트 실패:", err);
   }
 }
+
 
 
 
