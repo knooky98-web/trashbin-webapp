@@ -1170,7 +1170,7 @@ function locateMe() {
 
 /* ---------------------- 바텀시트 닫힌 위치 계산 🔥 ---------------------- */
 function getSheetClosedBottom(panel) {
-  const peek = 160;
+  const peek = 120;
   return -(panel.offsetHeight - peek);
 }
 
@@ -1831,6 +1831,7 @@ async function updateBinLocation(binId, newLat, newLng) {
     console.error("업데이트 실패:", err);
   }
 }
+
 
 
 
