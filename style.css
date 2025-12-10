@@ -1478,4 +1478,57 @@ body {
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
+/* ===============================
+   타입 필터 칩 (모두 / 일반 / 재활용)
+================================= */
+
+/* 기본 체크박스는 숨기기 */
+#typeAll,
+#typeGeneral,
+#typeRecycle {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* 공통 칩 모양 (기본은 연한 회색 배경) */
+#typeAll + span,
+#typeGeneral + span,
+#typeRecycle + span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 6px 14px;
+  margin-right: 6px;
+
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+
+  background: rgba(15, 23, 42, 0.06);   /* 라이트모드 기본 */
+  color: #0f172a;
+  border: none;
+
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+}
+
+/* 선택됐을 때 → 예쁜 그라데이션 */
+#typeAll:checked + span,
+#typeGeneral:checked + span,
+#typeRecycle:checked + span {
+  background-image: linear-gradient(135deg, #22c55e, #0ea5e9);
+  color: #ffffff;
+  box-shadow: 0 6px 18px rgba(34, 197, 94, 0.45);
+}
+
+/* 🔦 다크모드일 때 기본 칩 색만 조금 어둡게 */
+[data-theme="dark"] #typeAll + span,
+[data-theme="dark"] #typeGeneral + span,
+[data-theme="dark"] #typeRecycle + span {
+  background: rgba(148, 163, 184, 0.2);
+  color: #e5e7eb;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.6);
+}
+
 
