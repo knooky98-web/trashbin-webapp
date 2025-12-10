@@ -118,51 +118,6 @@ body {
   color: #6b7280;
 }
 
-/* ====================================
-   타입 필터 pill 버튼
-==================================== */
-#type-filter-box {
-  margin-top: 8px;
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-/* pill 전체를 span 하나로 보이게 재구성 */
-.type-pill {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 999px;
-  padding: 0;                 /* 바깥 여백 제거 */
-  background: transparent;    /* 흰 배경 제거 */
-  border: none;               /* 흰 테두리 제거 */
-  font-size: 12px;
-  color: #4b5563;
-  cursor: pointer;
-  user-select: none;
-}
-
-.type-pill input {
-  display: none;
-}
-
-/* 평소 상태 – 흰색 pill */
-.type-pill span {
-  display: inline-block;
-  padding: 6px 12px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(148, 163, 184, 0.6);
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
-}
-
-/* 체크됐을 때 – 전체 그라데이션 pill */
-.type-pill input:checked + span {
-  background: linear-gradient(135deg, #2563eb, #22c55e);
-  color: #ffffff;
-  border: none;              /* 테두리도 제거 */
-}
-
 
 /* ====================================
    FLOATING '내 위치' 버튼
@@ -576,20 +531,7 @@ body {
   color: #9ca3af;
 }
 
-/* 타입 필터 pill */
-:root[data-theme="dark"] .type-pill span {
-  background: rgba(31, 41, 55, 0.95);
-  border: 1px solid #4b5563;
-  color: #e5e7eb;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
-}
 
-/* 체크된 pill – 살짝 네온 느낌 */
-:root[data-theme="dark"] .type-pill input:checked + span {
-  background: linear-gradient(135deg, #2563eb, #22c55e);
-  border: none;
-  color: #ffffff;
-}
 
 /* 리스트 시트(내 주변 쓰레기통 패널) */
 :root[data-theme="dark"] .bottom-sheet {
@@ -1536,4 +1478,5 @@ body {
 }
 
 /* 선택된 상태는 위 그라데이션 그대로 사용하니까 따로 다크모드용 수정 필요 없음 */
+
 
