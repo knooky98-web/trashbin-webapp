@@ -1427,20 +1427,17 @@ body {
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
-/* ===============================
-   타입 필터 칩 (모두 / 일반 / 재활용)
-   (라이트/다크 공통)
-================================= */
+/* 🔥 타입 필터 최종 오버라이드 – 라이트/다크 공통 (맨 아래에 넣기) */
 
-/* 기본: 체크박스는 숨기기 */
-.type-pill input {
+/* 체크박스 숨기기 */
+#type-filter-box .type-pill input {
   position: absolute;
   opacity: 0;
   pointer-events: none;
 }
 
 /* 기본 칩 모양 (선택 안 됐을 때) */
-.type-pill span {
+#type-filter-box .type-pill span {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1465,19 +1462,25 @@ body {
 }
 
 /* ✅ 선택됐을 때 – 라이트/다크 동일 그라데이션 */
-.type-pill input:checked + span {
+#type-filter-box .type-pill input:checked + span {
   background-image: linear-gradient(135deg, #22c55e, #0ea5e9);
   color: #ffffff;
   border-color: transparent;
   box-shadow: 0 6px 18px rgba(34, 197, 94, 0.45);
 }
 
-/* 🌙 다크모드일 때: 선택 안 된 칩만 살짝 어둡게 */
-:root[data-theme="dark"] .type-pill span {
+/* 🌙 다크모드일 때: 기본(선택 안 된) 칩 */
+:root[data-theme="dark"] #type-filter-box .type-pill span {
   background: rgba(15, 23, 42, 0.9);
   color: #e5e7eb;
   border-color: #4b5563;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
 }
 
-
+/* 🌙 다크모드 + 선택됨: 같은 그라데이션 유지 */
+:root[data-theme="dark"] #type-filter-box .type-pill input:checked + span {
+  background-image: linear-gradient(135deg, #22c55e, #0ea5e9);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 6px 18px rgba(34, 197, 94, 0.7);
+}
