@@ -55,6 +55,13 @@ body {
   width: 100%;
   pointer-events: auto;
 }
+/* 타입 필터 박스 위치 조정 */
+#type-filter-box {
+  margin-top: 7px;     /* 🔥 여기 숫자 키우면 더 아래로 내려감 (예: 12px, 14px) */
+  display: flex;
+  gap: 6px;
+  pointer-events: auto; /* 필터 버튼이 눌리도록 */
+}
 
 /* 검색창 */
 #searchInput {
@@ -1484,3 +1491,4 @@ body {
   border-color: transparent;
   box-shadow: 0 6px 18px rgba(34, 197, 94, 0.7);
 }
+
