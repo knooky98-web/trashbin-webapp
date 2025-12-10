@@ -337,7 +337,7 @@ const savedZoom = parseInt(localStorage.getItem("LAST_USER_ZOOM") || "0", 10);
 
 // 기본은 서울 시청 근처
 let initialCenter = [37.5665, 126.978];
-let initialZoom   = 11;
+let initialZoom   = 13;
 
 // ✅ 예전에 한 번이라도 위치를 가져와서 저장된 게 있으면 → 그걸로 시작
 if (!isNaN(savedLat) && !isNaN(savedLng)) {
@@ -1787,6 +1787,7 @@ async function updateBinLocation(binId, newLat, newLng) {
     console.error("업데이트 실패:", err);
   }
 }
+
 
 
 
