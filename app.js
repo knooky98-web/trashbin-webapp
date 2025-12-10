@@ -1,5 +1,6 @@
 /* =====================================================
    쓰레기통 웹앱 app.js
+   - 자동 내 위치 시작 (⭐ 추가됨)
    - 마커 하이라이트
    - 중복 제거
    - 경로 표시 + 선 위 화살표
@@ -11,88 +12,76 @@
 ===================================================== */
 
 /* ---------------------- GLOBAL STATE ---------------------- */
-// ⭐ Google Apps Script Web App URL
 const UPDATE_ENDPOINT =
   "https://script.google.com/macros/s/AKfycbzeqmh1psSinf5Qv5Tt3C1lXT4IBbaOUpWnRXJURU-bPALs9wWa8PYalxYNKxEUD1t6/exec";
-// ⭐ 문의사항 Google Sheets Web App URL
 const INQUIRY_ENDPOINT =
   "https://script.google.com/macros/s/AKfycbxQOfJQNFgGStxyMvOMdpg4RMkpz38hKaMDqpHt1mUw41GE1JZGeAt6YFUKQ_poYL3I/exec";
 
-// ⭐ 앱 공유용 URL (나중에 실제 배포 주소로 바꿔도 됨)
+// ⭐ 앱 공유 URL
 const APP_SHARE_URL = window.location.href;
 
 let userLat = null;
 let userLng = null;
-let lastClickedBinForInquiry = null; // 문의용으로 마지막 클릭한 쓰레기통
+let lastClickedBinForInquiry = null;
 
-// 👉 첫 방문 안내 팝업을 이미 보여줬는지
+// 첫 방문 안내 여부
 let locateHintShown = localStorage.getItem("LOCATE_HINT_SHOWN") === "Y";
 
 const markersById = {};
-const binById = {}; // id → bin 데이터
+const binById = {};
 
-// 타입 필터 상태 (기본: 둘 다 켜짐)
+// 필터
 let typeFilterState = {
-  general: true, // 일반
-  recycle: true, // 재활용
+  general: true,
+  recycle: true,
 };
 
-// 현재 강조(하이라이트) 중인 마커
 let currentHighlightedMarker = null;
 
-// ✅ 앱 경로 안내 팝업을 이미 보여줬는지 여부
-let inAppRouteAlertShown = false;
-
-// ✅ 우리 앱에서 그린 경로(폴리라인)를 저장
+// 경로
 let routeLayer = null;
-// ✅ 바깥쪽 아웃라인(두꺼운 흰색 라인)
 let routeOutline = null;
-// ✅ 경로 화살표 레이어 저장
 let routeArrows = null;
 
-// 🔥 바텀시트 드래그 직후 지도 클릭을 무시하기 위한 플래그
-let justDraggedSheet = false;
-
-// ✅ 내 위치 + 방향 화살표용 전역
-let userMarker = null;        // 내 위치 마커
-let geoHeading = null;        // GPS 이동 방향 (속도 있을 때만)
-let compassHeading = null;    // 나침반 방향
-let lastHeading = null;       // 마지막으로 사용한 각도(스무딩용)
-let geoWatchId = null;        // watchPosition ID
-let hasInitialFix = false;    // 첫 위치를 잡았는지 여부
-let compassStarted = false;   // 나침반 이벤트 중복 등록 방지
-let lastCompassTs = 0;        // 마지막 나침반 이벤트 시각(ms)
-// 🔥 나침반 회전 스무딩용
+// 위치·방향 아이콘
+let userMarker = null;
+let geoHeading = null;
+let compassHeading = null;
+let lastHeading = null;
+let geoWatchId = null;
+let hasInitialFix = false;
+let compassStarted = false;
+let lastCompassTs = 0;
 let lastCompassHeading = null;
 
-/* 방향 보정 유틸 */
+// 정확도 기준
+const MIN_ACCURACY = 80;
+
+// 위치 샘플 평균
+let recentPositions = [];
+const RECENT_POS_LIMIT = 5;
+
+// 나침반
+let compassSvgEl = null;
+
+// 지도 테마 상태
+let currentTheme = "light";
+let currentStyle = "osm";
+let tileLayer = null;
+
+// 로딩 오버레이
+let loadingOverlayEl = null;
+let loadingTextEl = null;
+
+// 문의 선택 모드
+let isPickingInquiryLocation = false;
+
+/* ---------------------- 유틸 ---------------------- */
 function normalizeHeading(deg) {
   let h = deg % 360;
   if (h < 0) h += 360;
   return h;
 }
-
-// 🔧 위치 정확도 기준 (이제 “무시”용이 아니라 heading 판정에만 사용)
-const MIN_ACCURACY = 80; // m, 이보다 안 좋으면 방향(heading)만 무시
-
-// 🔧 위치 보정용 최근 샘플
-let recentPositions = []; // 최근 위치 샘플들 (보정용)
-const RECENT_POS_LIMIT = 5; // 최대 5개까지 평균
-
-// 🔧 나침반 컨트롤용 전역
-let compassSvgEl = null;
-
-// ✅ 지도 테마/스타일 상태
-let currentTheme = "light"; // "light" | "dark"
-let currentStyle = "osm"; // "osm" | "carto" | "voyager"
-let tileLayer = null;
-
-// 🔄 로딩 오버레이용 전역
-let loadingOverlayEl = null;
-let loadingTextEl = null;
-
-// 🧷 지도에서 문의 위치 선택 모드 여부
-let isPickingInquiryLocation = false;
 
 /* ---------------------- LOADING OVERLAY ---------------------- */
 function ensureLoadingOverlay() {
@@ -137,7 +126,6 @@ function ensureLoadingOverlay() {
   overlay.appendChild(card);
   document.body.appendChild(overlay);
 
-  // 애니메이션 스타일 추가
   const styleEl = document.createElement("style");
   styleEl.textContent = `
     @keyframes loading-spin {
@@ -156,14 +144,12 @@ function showLoading(message) {
   if (loadingTextEl && message) loadingTextEl.textContent = message;
   loadingOverlayEl.style.display = "flex";
 }
-
 function hideLoading() {
   if (!loadingOverlayEl) return;
   loadingOverlayEl.style.display = "none";
 }
 
-/* ---------------------- 내 위치 아이콘 (동그라미) ---------------------- */
-// 🔵 내 위치 동그라미 아이콘 (카카오맵 느낌)
+/* ---------------------- 내 위치 아이콘 ---------------------- */
 const userDotIcon = L.divIcon({
   className: "user-dot",
   html: `
@@ -179,8 +165,7 @@ const userDotIcon = L.divIcon({
   iconSize: [18, 18],
   iconAnchor: [9, 9],
 });
-
-/* 내 위치 화살표/동그라미 회전 (방향 표시) */
+/* 내 위치 화살표/동그라미 회전 */
 function updateUserMarkerHeading() {
   // 🔹 우선순위: GPS 이동 방향 → 나침반 방향
   let heading = null;
@@ -190,28 +175,24 @@ function updateUserMarkerHeading() {
   } else if (compassHeading !== null && !isNaN(compassHeading)) {
     heading = compassHeading;
   } else {
-    return; // 사용할 각도 없음
+    return;
   }
 
   heading = normalizeHeading(heading);
 
   if (lastHeading === null) {
-    // 첫 값은 그대로 사용
     lastHeading = heading;
   } else {
-    // 항상 최단 경로(-180 ~ 180)로 회전
     let diff = heading - lastHeading;
     if (diff > 180) diff -= 360;
     if (diff < -180) diff += 360;
 
-    // 🔇 너무 작은 변화(3도 이내)는 무시 → 잔떨림 제거
     if (Math.abs(diff) < 3) {
       return;
     }
 
-    // 🔧 한 번에 너무 많이 돌지 않도록 회전량 제한
-    const maxStep = 15;       // 한 번에 최대 15도만
-    let step = diff * 0.3;    // 기본은 30%만 따라가기 (부드럽게)
+    const maxStep = 15;
+    let step = diff * 0.3;
 
     if (step > maxStep) step = maxStep;
     if (step < -maxStep) step = -maxStep;
@@ -221,7 +202,6 @@ function updateUserMarkerHeading() {
 
   const finalHeading = lastHeading;
 
-  // 🔺 내 위치 아이콘 회전 (동그라미라 사실 티는 거의 안 나지만 유지)
   if (userMarker && typeof userMarker.setRotationAngle === "function") {
     userMarker.setRotationAngle(finalHeading);
   } else if (userMarker && userMarker._icon) {
@@ -230,57 +210,44 @@ function updateUserMarkerHeading() {
 }
 
 /* ---------------------- 나침반 ---------------------- */
-
 function handleOrientation(event) {
   let heading = null;
 
-  // 🔹 iOS (Safari)
   if (
     typeof event.webkitCompassHeading === "number" &&
     !isNaN(event.webkitCompassHeading)
   ) {
-    heading = event.webkitCompassHeading; // 0~360, 북쪽 기준
-  }
-  // 🔹 안드로이드 / 기타 (alpha)
-  else if (typeof event.alpha === "number" && !isNaN(event.alpha)) {
-    // 기기 기준 각도 → 나침반 기준으로 변환
+    heading = event.webkitCompassHeading;
+  } else if (typeof event.alpha === "number" && !isNaN(event.alpha)) {
     heading = 360 - event.alpha;
   }
 
   if (heading === null) return;
 
-  // 0~360 정규화
   heading = normalizeHeading(heading);
 
   const now = Date.now();
   const dt = now - lastCompassTs;
 
-  // 🔒 너무 자주 오는 이벤트(60ms 이내)는 무시 → 떨림 제거용
   if (dt < 60) {
     return;
   }
   lastCompassTs = now;
 
-  // 🔥 급발진(센서 미친 값) 필터
   if (lastCompassHeading != null) {
-    // 항상 -180 ~ 180 사이의 "가장 가까운 차이"로 계산
     let rawDiff = ((heading - lastCompassHeading + 540) % 360) - 180;
-
-    // → 변화량이 너무 크고, 시간도 너무 짧으면 센서 오류로 판단
     if (Math.abs(rawDiff) > 100 && dt < 150) {
-      return; // 급발진 → 무시
+      return;
     }
   }
 
-  // 🔧 스무딩: 항상 "가까운 쪽"으로 조금씩 따라가기
   if (lastCompassHeading == null) {
     lastCompassHeading = heading;
   } else {
     let diff = ((heading - lastCompassHeading + 540) % 360) - 180;
 
-    // 변화량 40%만 따라가기
     let step = diff * 0.4;
-    const maxStep = 8; // 한 번에 최대 8도
+    const maxStep = 8;
 
     if (step > maxStep) step = maxStep;
     if (step < -maxStep) step = -maxStep;
@@ -288,10 +255,8 @@ function handleOrientation(event) {
     lastCompassHeading = normalizeHeading(lastCompassHeading + step);
   }
 
-  // 👉 내 위치 아이콘에서 쓸 실제 방향 값
   compassHeading = lastCompassHeading;
 
-  // 👉 화면에 표시되는 나침반 (N 글자는 항상 북쪽)
   const rotateDeg = -lastCompassHeading;
 
   if (compassSvgEl) {
@@ -301,7 +266,7 @@ function handleOrientation(event) {
 }
 
 function initCompass() {
-  if (compassStarted) return; // 중복 등록 방지
+  if (compassStarted) return;
   if (typeof DeviceOrientationEvent === "undefined") return;
 
   const startListening = () => {
@@ -310,7 +275,6 @@ function initCompass() {
     window.addEventListener("deviceorientation", handleOrientation, true);
   };
 
-  // 🔹 iOS 13+ : 권한 요청 필요
   if (typeof DeviceOrientationEvent.requestPermission === "function") {
     DeviceOrientationEvent.requestPermission()
       .then((res) => {
@@ -322,12 +286,11 @@ function initCompass() {
       })
       .catch((err) => console.error(err));
   } else {
-    // 🔹 안드로이드/기타: 바로 시작
     startListening();
   }
 }
 
-/* ---------------------- 위치 그룹핑 ---------------------- */
+/* ---------------------- 위치 그룹핑 & 중복 제거 ---------------------- */
 const locationGroups = {};
 if (window.BINS_SEOUL) {
   window.BINS_SEOUL.forEach((bin) => {
@@ -338,7 +301,6 @@ if (window.BINS_SEOUL) {
   });
 }
 
-/* ---------------------- BIN 중복 제거 ---------------------- */
 function dedupeBins(bins) {
   if (!Array.isArray(bins)) return [];
   const seen = new Set();
@@ -389,23 +351,20 @@ function getCurrentTileUrl() {
   if (currentStyle === "osm") {
     return TILE_URLS.osm;
   }
-
   if (currentStyle === "carto") {
     return currentTheme === "dark"
       ? TILE_URLS.carto_dark
       : TILE_URLS.carto_light;
   }
-
   if (currentStyle === "voyager") {
     return TILE_URLS.voyager;
   }
-
   return TILE_URLS.osm;
 }
+
 function refreshBaseLayer() {
   const url = getCurrentTileUrl();
 
-  // ✅ html + body 둘 다에 data-theme 넣기
   document.documentElement.setAttribute("data-theme", currentTheme);
   if (document.body) {
     document.body.setAttribute("data-theme", currentTheme);
@@ -417,7 +376,6 @@ function refreshBaseLayer() {
 
   tileLayer = L.tileLayer(url, tileOptions).addTo(map);
 }
-
 
 refreshBaseLayer();
 
@@ -436,7 +394,6 @@ function createCompassControl() {
   compassControl.onAdd = function () {
     const div = L.DomUtil.create("div", "compass-control");
 
-    // 기본 스타일은 CSS에서 하고, 여기서는 크기·클릭 방지만 살짝
     div.style.width = "52px";
     div.style.height = "52px";
     div.style.cursor = "default";
@@ -450,7 +407,6 @@ function createCompassControl() {
           </radialGradient>
         </defs>
 
-        <!-- 바깥 유리 원 -->
         <circle
           cx="50"
           cy="50"
@@ -460,7 +416,6 @@ function createCompassControl() {
           stroke-width="2"
         />
 
-        <!-- 내부 점선 -->
         <circle
           cx="50"
           cy="50"
@@ -471,19 +426,16 @@ function createCompassControl() {
           stroke-dasharray="4 4"
         />
 
-        <!-- 방향 문자 -->
         <text x="50" y="17" text-anchor="middle" font-size="14" fill="#111827">N</text>
         <text x="50" y="93" text-anchor="middle" font-size="14" fill="#6b7280">S</text>
         <text x="87" y="53" text-anchor="middle" font-size="12" fill="#6b7280">E</text>
         <text x="13" y="53" text-anchor="middle" font-size="12" fill="#6b7280">W</text>
 
-        <!-- 북쪽 화살표 -->
         <polygon
           points="50,20 59,45 50,40 41,45"
           fill="#111827"
         />
 
-        <!-- 중앙 점 -->
         <circle
           cx="50"
           cy="50"
@@ -634,7 +586,6 @@ function drawRouteToBin(bin) {
     return;
   }
 
-  // 🔥 기존 경로/아웃라인/화살표 제거
   if (routeLayer) {
     map.removeLayer(routeLayer);
     routeLayer = null;
@@ -673,7 +624,6 @@ function drawRouteToBin(bin) {
         c[0],
       ]);
 
-      // ⚪ 바깥 아주 두꺼운 흰색 아웃라인
       routeOutline = L.polyline(coords, {
         color: "#ffffff",
         weight: 14,
@@ -681,7 +631,6 @@ function drawRouteToBin(bin) {
         lineJoin: "round",
       }).addTo(map);
 
-      // 🔵 안쪽 메인 파란 선
       routeLayer = L.polyline(coords, {
         color: "#1d4ed8",
         weight: 7,
@@ -689,7 +638,6 @@ function drawRouteToBin(bin) {
         lineJoin: "round",
       }).addTo(map);
 
-      // ⚪ 경로 위 흰색 화살표 (polylineDecorator가 있을 때만)
       if (L.polylineDecorator) {
         routeArrows = L.polylineDecorator(routeLayer, {
           patterns: [
@@ -738,12 +686,12 @@ function openInAppRoute(bin) {
 
   drawRouteToBin(bin);
 
-  if (!inAppRouteAlertShown) {
+  if (!window.inAppRouteAlertShown) {
     alert(
       "이 화면의 ‘앱에서 경로 보기’는\n지도 위에 대략적인 경로만 보여줘요.\n\n" +
         "실제 내비게이션 안내가 필요하다면\n‘카카오맵 내비 열기’를 이용해 주세요."
     );
-    inAppRouteAlertShown = true;
+    window.inAppRouteAlertShown = true;
   }
 }
 
@@ -769,11 +717,8 @@ function updateInquiryLocationField() {
   if (!lastClickedBinForInquiry) return;
 
   const b = lastClickedBinForInquiry;
-
-  // 주소를 최우선 → 없으면 이름 → 그래도 없으면 ""
   locInput.value = b.addr || b.name || "";
 }
-
 /* ---------------------- MARKERS ---------------------- */
 function addBinsToMap() {
   const groupIndex = {};
@@ -900,7 +845,6 @@ function openMiniInfo(bin) {
     openDirections(bin);
   });
 
-  // ✅ 닫기 버튼 동작
   const closeBtn = el.querySelector(".mini-close-btn");
   if (closeBtn) {
     closeBtn.addEventListener("click", (e) => {
@@ -1048,7 +992,6 @@ function updateSearchSuggest(keyword) {
   const box = document.getElementById("search-suggest");
   if (!box) return;
 
-  // 🔹 자동완성 기능 비활성화: 항상 숨기기
   box.style.display = "none";
   box.innerHTML = "";
 }
@@ -1067,7 +1010,6 @@ function locateMe() {
   if (geoWatchId !== null) {
     if (userLat != null && userLng != null) {
       map.setView([userLat, userLng], 16);
-      // 🔹 내 위치 버튼 다시 눌렀을 때도 리스트 패널 열어주기
       openListPanel();
       updateNearbyBins(userLat, userLng);
     }
@@ -1084,7 +1026,6 @@ function locateMe() {
       const rawLng = p.coords.longitude;
       const acc = p.coords.accuracy || 9999;
 
-      // 🔹 최근 위치 리스트에 추가해서 평균으로 스무딩
       recentPositions.push({ lat: rawLat, lng: rawLng });
       if (recentPositions.length > RECENT_POS_LIMIT) {
         recentPositions.shift();
@@ -1104,16 +1045,12 @@ function locateMe() {
       const heading = p.coords.heading;
       const speed = p.coords.speed;
 
-      // 🔒 방향은 "꽤 확실히 이동 중"일 때만 사용
-      // - heading 값 실제로 있고
-      // - 속도 0.5m/s 이상 (천천히 걷기 이상)
-      // - 정확도도 어느 정도 괜찮을 때만
       if (
         heading !== null &&
         !isNaN(heading) &&
         speed !== null &&
-        speed > 0.5 &&      // ← 기준 완화 (1.2 → 0.5)
-        acc <= MIN_ACCURACY // ← 80m 이내면 방향 사용
+        speed > 0.5 &&
+        acc <= MIN_ACCURACY
       ) {
         geoHeading = heading;
       } else {
@@ -1133,7 +1070,6 @@ function locateMe() {
         hasInitialFix = true;
         hideLoading();
 
-        // 🔹 첫 위치를 잡았을 때 자동으로 리스트 패널 열기
         openListPanel();
       }
 
@@ -1175,7 +1111,7 @@ function locateMe() {
 
 /* ---------------------- 바텀시트 닫힌 위치 계산 🔥 ---------------------- */
 function getSheetClosedBottom(panel) {
-  const peek = 90;
+  const peek = 90; // ← 여기 값을 줄이면 더 적게 보이고, 늘리면 더 많이 보임
   return -(panel.offsetHeight - peek);
 }
 
@@ -1201,16 +1137,15 @@ function openListPanel() {
   const listPanel = document.getElementById("list-panel");
   if (!listPanel) return;
 
-  listPanel.style.bottom = "0px"; // 완전히 올린 상태
+  listPanel.style.bottom = "0px";
   refreshSheetOpenClass();
 }
 
 /* ---------------------- DRAG SHEET ---------------------- */
 /* ✅ 드래그 기능 완전히 비활성화 */
 function enableDrag(panel, handle) {
-  // 이제 드래그는 사용하지 않음
+  // 현재는 드래그 비활성 (토글용 껍데기만 유지)
 }
-
 
 /* ---------------------- FLOATING LOCATE BTN ---------------------- */
 function createFloatingLocateButton() {
@@ -1269,10 +1204,10 @@ window.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    // 🔹 드래그로 시트 열고/닫기 활성화 (손잡이 기준)
     enableDrag(listPanel, listHandle);
   }
- // 🔒 리스트에서 아래로 끌 때 '브라우저 새로고침 제스처' 막기
+
+  // 🔒 리스트에서 아래로 끌 때 브라우저 새로고침 제스처 막기
   const nearbyList = document.getElementById("nearby-list");
   if (nearbyList) {
     let startY = 0;
@@ -1297,7 +1232,8 @@ window.addEventListener("DOMContentLoaded", () => {
       { passive: false }
     );
   }
-  // ✅ 문의 위치 입력칸은 항상 사용자가 직접 수정 가능하도록
+
+  // ✅ 문의 위치 입력칸 사용자가 직접 수정 가능
   const inquiryLocationInput = document.getElementById("inquiry-location");
   if (inquiryLocationInput) {
     inquiryLocationInput.removeAttribute("readonly");
@@ -1373,8 +1309,6 @@ window.addEventListener("DOMContentLoaded", () => {
   const shareBtn = document.getElementById("share-app-btn");
   if (shareBtn) {
     shareBtn.addEventListener("click", async () => {
-      alert("공유 버튼 눌림 ✅");
-
       if (typeof closeSidePanel === "function") {
         closeSidePanel();
       }
@@ -1510,7 +1444,6 @@ window.addEventListener("DOMContentLoaded", () => {
       const loc = locEl?.value.trim() || "";
       const content = contentEl?.value.trim() || "";
 
-      // 🔹 제목 결정 로직 (드롭다운 + 기타 입력)
       let finalTitle = "";
       const sel = document.getElementById("inquiry-title-select");
       const custom = document.getElementById("inquiry-title-custom");
@@ -1572,17 +1505,15 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-      /* ---------- 화면 모드 & 지도 스타일 ---------- */
+  /* ---------- 화면 모드 & 지도 스타일 ---------- */
   const themeToggle = document.getElementById("themeToggle");
   if (themeToggle) {
-    // ✅ OS 다크모드 감지 안 하고, 무조건 라이트로 시작
+    // ✅ 무조건 라이트로 시작
     currentTheme = "light";
-    themeToggle.checked = false; // 토글 OFF = 라이트
+    themeToggle.checked = false;
 
-    // 라이트 테마로 한 번 강제 적용
     refreshBaseLayer();
 
-    // 토글 ON/OFF에 따라 dark / light 전환
     themeToggle.addEventListener("change", () => {
       currentTheme = themeToggle.checked ? "dark" : "light";
       refreshBaseLayer();
@@ -1685,7 +1616,6 @@ window.addEventListener("DOMContentLoaded", () => {
         const m = markersById[match.id];
         if (m) highlightMarker(m);
 
-        // 🔥 Enter 검색 성공 시 → 리스트 패널 자동 열기 + 내 위치 기준 리스트 갱신
         openListPanel();
         if (userLat != null && userLng != null) {
           updateNearbyBins(userLat, userLng);
@@ -1705,7 +1635,6 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 
   map.on("click", () => {
-    // 🔥 방금 시트를 드래그해서 놓은 경우라면, 이 클릭은 무시
     if (justDraggedSheet) {
       justDraggedSheet = false;
       return;
@@ -1717,7 +1646,6 @@ window.addEventListener("DOMContentLoaded", () => {
       box.innerHTML = "";
     }
 
-    // 🔥 바텀시트를 완전 숨기지 말고, 윗부분만 보이는 닫힌 상태로
     const listPanel = document.getElementById("list-panel");
     if (listPanel) {
       listPanel.style.bottom = `${getSheetClosedBottom(listPanel)}px`;
@@ -1728,7 +1656,7 @@ window.addEventListener("DOMContentLoaded", () => {
   addBinsToMap();
   populateDistrictFilter();
 
-  /* ---------- 온보딩 팝업 (2단계) ---------- */
+  /* ---------- 온보딩 팝업 ---------- */
   if (!locateHintShown) {
     function showLocateHintPopup() {
       if (document.getElementById("locate-hint-popup")) return;
@@ -1795,7 +1723,7 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-/* ---------- 📄 약관 · 개인정보 링크 연결 (HTML에 id가 있다면 동작) ---------- */
+/* ---------- 📄 약관 · 개인정보 링크 ---------- */
 const termsLink = document.getElementById("terms-link");
 const privacyLink = document.getElementById("privacy-link");
 
@@ -1830,16 +1758,3 @@ async function updateBinLocation(binId, newLat, newLng) {
     console.error("업데이트 실패:", err);
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
