@@ -545,6 +545,13 @@ body {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   border: none !important;
 }
+/* 🌙 다크모드일 때 줌 버튼 색상 */
+:root[data-theme="dark"] .leaflet-control-zoom-in,
+:root[data-theme="dark"] .leaflet-control-zoom-out {
+  background: rgba(15, 23, 42, 0.95) !important; /* 거의 검은색 */
+  color: #e5e7eb !important;                      /* + / - 글자 밝게 */
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.7);
+}
 
 /* ====================================
    🔥 DARK MODE (앱 토글 기준)
@@ -1530,5 +1537,6 @@ body {
   color: #e5e7eb;
   box-shadow: 0 1px 4px rgba(15, 23, 42, 0.6);
 }
+
 
 
