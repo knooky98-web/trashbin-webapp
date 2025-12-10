@@ -329,8 +329,30 @@ if (window.BINS_SEOUL) {
 }
 
 /* ---------------------- MAP INIT ---------------------- */
-const map = L.map("map").setView([37.5665, 126.978], 11);
+
+// 🔹 로컬스토리지에 저장해 둔 마지막 내 위치 불러오기
+const savedLat  = parseFloat(localStorage.getItem("LAST_USER_LAT")  || "NaN");
+const savedLng  = parseFloat(localStorage.getItem("LAST_USER_LNG")  || "NaN");
+const savedZoom = parseInt(localStorage.getItem("LAST_USER_ZOOM") || "0", 10);
+
+// 기본은 서울 시청 근처
+let initialCenter = [37.5665, 126.978];
+let initialZoom   = 11;
+
+// ✅ 예전에 한 번이라도 위치를 가져와서 저장된 게 있으면 → 그걸로 시작
+if (!isNaN(savedLat) && !isNaN(savedLng)) {
+  initialCenter = [savedLat, savedLng];
+
+  if (!isNaN(savedZoom) && savedZoom >= 11 && savedZoom <= 18) {
+    initialZoom = savedZoom;
+  } else {
+    initialZoom = 15;   // 저장된 줌이 이상하면 적당히 15로
+  }
+}
+
+const map = L.map("map").setView(initialCenter, initialZoom);
 map.zoomControl.setPosition("bottomright");
+
 
 const TILE_URLS = {
   osm: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
@@ -1041,7 +1063,14 @@ function locateMe() {
       );
       userLat = avg.lat / recentPositions.length;
       userLng = avg.lng / recentPositions.length;
-
+// ✅ 내 위치를 로컬스토리지에 저장 → 다음에 앱 켰을 때 초기 위치로 사용
+      try {
+        localStorage.setItem("LAST_USER_LAT", String(userLat));
+        localStorage.setItem("LAST_USER_LNG", String(userLng));
+        localStorage.setItem("LAST_USER_ZOOM", String(map.getZoom() || 16));
+      } catch (e) {
+        console.warn("마지막 위치 저장 실패:", e);
+      }
       const heading = p.coords.heading;
       const speed = p.coords.speed;
 
@@ -1758,3 +1787,4 @@ async function updateBinLocation(binId, newLat, newLng) {
     console.error("업데이트 실패:", err);
   }
 }
+
