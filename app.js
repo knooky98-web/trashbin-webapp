@@ -1570,34 +1570,19 @@ window.addEventListener("DOMContentLoaded", () => {
       /* ---------- 화면 모드 & 지도 스타일 ---------- */
   const themeToggle = document.getElementById("themeToggle");
   if (themeToggle) {
-    const prefersDark =
-      window.matchMedia &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches;
+    // ✅ OS 다크모드 감지 안 하고, 무조건 라이트로 시작
+    currentTheme = "light";
+    themeToggle.checked = false; // 토글 OFF = 라이트
 
-    if (prefersDark) {
-      currentTheme = "dark";
-      themeToggle.checked = true;
-    } else {
-      currentTheme = "light";
-      themeToggle.checked = false;
-    }
-
+    // 라이트 테마로 한 번 강제 적용
     refreshBaseLayer();
 
+    // 토글 ON/OFF에 따라 dark / light 전환
     themeToggle.addEventListener("change", () => {
       currentTheme = themeToggle.checked ? "dark" : "light";
       refreshBaseLayer();
     });
   }
-
-  const styleRadios = document.querySelectorAll('input[name="mapStyle"]');
-  styleRadios.forEach((radio) => {
-    radio.addEventListener("change", () => {
-      if (!radio.checked) return;
-      currentStyle = radio.value;
-      refreshBaseLayer();
-    });
-  });
 
   const styleRadios = document.querySelectorAll('input[name="mapStyle"]');
   styleRadios.forEach((radio) => {
@@ -1840,6 +1825,7 @@ async function updateBinLocation(binId, newLat, newLng) {
     console.error("업데이트 실패:", err);
   }
 }
+
 
 
 
