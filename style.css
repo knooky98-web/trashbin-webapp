@@ -1429,10 +1429,10 @@ body {
 
 /* ===============================
    타입 필터 칩 (모두 / 일반 / 재활용)
-   라이트/다크 공통 디자인
+   (라이트/다크 공통)
 ================================= */
 
-/* 체크박스 자체는 숨기기 */
+/* 기본: 체크박스는 숨기기 */
 .type-pill input {
   position: absolute;
   opacity: 0;
@@ -1452,16 +1452,19 @@ body {
   font-size: 13px;
   font-weight: 600;
 
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.95);
   color: #0f172a;
   border: 1px solid #e5e7eb;
 
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
-  transition: background 0.15s ease, color 0.15s ease,
-              box-shadow 0.15s ease, border-color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
 }
 
-/* ✅ 선택됐을 때 – 라이트/다크 동일하게 그라데이션 */
+/* ✅ 선택됐을 때 – 라이트/다크 동일 그라데이션 */
 .type-pill input:checked + span {
   background-image: linear-gradient(135deg, #22c55e, #0ea5e9);
   color: #ffffff;
@@ -1469,14 +1472,12 @@ body {
   box-shadow: 0 6px 18px rgba(34, 197, 94, 0.45);
 }
 
-/* 🌙 다크모드일 때 "선택 안 된" 칩만 조금 어둡게 */
+/* 🌙 다크모드일 때: 선택 안 된 칩만 살짝 어둡게 */
 :root[data-theme="dark"] .type-pill span {
   background: rgba(15, 23, 42, 0.9);
   color: #e5e7eb;
   border-color: #4b5563;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
 }
-
-/* 선택된 상태는 위 그라데이션 그대로 사용하니까 따로 다크모드용 수정 필요 없음 */
 
 
