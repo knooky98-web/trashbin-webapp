@@ -1143,6 +1143,13 @@ function getSheetClosedBottom(panel) {
   const peek = 90; // ← 여기 값을 줄이면 더 적게 보이고, 늘리면 더 많이 보임
   return -(panel.offsetHeight - peek);
 }
+function closeListPanel() {
+  const listPanel = document.getElementById("list-panel");
+  if (!listPanel) return;
+
+  const closedBottom = getSheetClosedBottom(listPanel);
+  listPanel.style.bottom = `${closedBottom}px`;
+}
 
 /* ---------------------- sheet-open 상태 갱신 ---------------------- */
 function refreshSheetOpenClass() {
@@ -1663,17 +1670,21 @@ window.addEventListener("DOMContentLoaded", () => {
     if (userLat != null) updateNearbyBins(userLat, userLng);
   });
 
-  map.on("click", () => {
-    if (justDraggedSheet) {
-      justDraggedSheet = false;
-      return;
-    }
+map.on("click", () => {
+  if (justDraggedSheet) {
+    justDraggedSheet = false;
+    return;
+  }
 
-    const box = document.getElementById("search-suggest");
-    if (box) {
-      box.style.display = "none";
-      box.innerHTML = "";
-    }
+  const box = document.getElementById("search-suggest");
+  if (box) {
+    box.style.display = "none";
+    box.innerHTML = "";
+  }
+
+  closeListPanel(); // ⭐ 지도 터치 → 카드 접기
+});
+
 
     const listPanel = document.getElementById("list-panel");
     if (listPanel) {
@@ -1787,6 +1798,7 @@ async function updateBinLocation(binId, newLat, newLng) {
     console.error("업데이트 실패:", err);
   }
 }
+
 
 
 
