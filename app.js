@@ -1685,14 +1685,6 @@ map.on("click", () => {
   closeListPanel(); // ⭐ 지도 터치 → 카드 접기
 });
 
-
-    const listPanel = document.getElementById("list-panel");
-    if (listPanel) {
-      listPanel.style.bottom = `${getSheetClosedBottom(listPanel)}px`;
-      refreshSheetOpenClass();
-    }
-  });
-
   addBinsToMap();
   populateDistrictFilter();
 
@@ -1798,6 +1790,7 @@ async function updateBinLocation(binId, newLat, newLng) {
     console.error("업데이트 실패:", err);
   }
 }
+
 
 
 
