@@ -1241,11 +1241,6 @@ window.addEventListener("DOMContentLoaded", () => {
   // ✅ 핵심: click 대신 pointerdown (모바일에서 훨씬 안정적)
   listHandle.addEventListener("pointerdown", onToggle, { passive: false });
 
-  // ✅ 보험: 어떤 환경에서 pointer가 꼬일 때 click도 남겨둠
-  listHandle.addEventListener("click", (e) => {
-    e.stopPropagation();
-    toggleSheet();
-  });
 }
 
 
@@ -1810,6 +1805,7 @@ async function updateBinLocation(binId, newLat, newLng) {
     console.error("업데이트 실패:", err);
   }
 }
+
 
 
 
