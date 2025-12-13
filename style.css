@@ -1492,3 +1492,12 @@ body {
   box-shadow: 0 6px 18px rgba(34, 197, 94, 0.7);
 }
 
+#list-handle{
+  position: relative;
+  z-index: 20000;
+  pointer-events: auto;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
