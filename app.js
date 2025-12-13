@@ -821,13 +821,9 @@ function ensureMiniInfoDom() {
   miniInfoEl.id = "mini-info";
   document.body.appendChild(miniInfoEl);
 
-  map.on("click", () => {
-    miniInfoEl.classList.remove("active");
-    document.body.classList.remove("mini-open");
-  });
-
   return miniInfoEl;
 }
+
 
 function openMiniInfo(bin) {
   const el = ensureMiniInfoDom();
@@ -1671,19 +1667,23 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 
 map.on("click", () => {
-  if (justDraggedSheet) {
-    justDraggedSheet = false;
-    return;
-  }
-
+  // 검색 추천 닫기
   const box = document.getElementById("search-suggest");
   if (box) {
     box.style.display = "none";
     box.innerHTML = "";
   }
 
-  closeListPanel(); // ⭐ 지도 터치 → 카드 접기
+  // 미니 정보 카드 닫기
+  const mini = document.getElementById("mini-info");
+  if (mini) mini.classList.remove("active");
+  document.body.classList.remove("mini-open");
+
+  // 바텀시트(리스트 패널) 접기
+  closeListPanel();
+  refreshSheetOpenClass();
 });
+
 
   addBinsToMap();
   populateDistrictFilter();
@@ -1790,6 +1790,7 @@ async function updateBinLocation(binId, newLat, newLng) {
     console.error("업데이트 실패:", err);
   }
 }
+
 
 
 
