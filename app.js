@@ -1210,8 +1210,6 @@ window.addEventListener("DOMContentLoaded", () => {
 
   // 👉 처음에는 살짝만 보이도록 닫힌 상태로 세팅
   if (listPanel) {
-     L.DomEvent.disableClickPropagation(listPanel);
-  L.DomEvent.disableScrollPropagation(listPanel);
     const closedBottom = getSheetClosedBottom(listPanel);
     listPanel.style.bottom = `${closedBottom}px`;
     refreshSheetOpenClass();
@@ -1231,18 +1229,12 @@ window.addEventListener("DOMContentLoaded", () => {
       refreshSheetOpenClass();
     };
 
-   if (listHandle) {
-  const onToggle = (e) => {
-    e.preventDefault();   // 모바일에서 탭 씹힘/지연 방지
-    e.stopPropagation();  // map 클릭으로 번지는 것 방지
-    toggleSheet();
-  };
-
-  // ✅ 핵심: click 대신 pointerdown (모바일에서 훨씬 안정적)
-  listHandle.addEventListener("pointerdown", onToggle, { passive: false });
-
-}
-
+    if (listHandle) {
+      listHandle.addEventListener("click", (e) => {
+        e.stopPropagation();
+        toggleSheet();
+      });
+    }
 
     enableDrag(listPanel, listHandle);
   }
@@ -1674,14 +1666,7 @@ window.addEventListener("DOMContentLoaded", () => {
     if (userLat != null) updateNearbyBins(userLat, userLng);
   });
 
-map.on("click", (e) => {
-  // ✅ 리스트 패널/손잡이/리스트 내부에서 발생한 클릭이면 map-click 처리하지 않음
-  const panel = document.getElementById("list-panel");
-  if (panel) {
-    const target = e?.originalEvent?.target;
-    if (target && panel.contains(target)) return;
-  }
-
+map.on("click", () => {
   // 검색 추천 닫기
   const box = document.getElementById("search-suggest");
   if (box) {
@@ -1805,12 +1790,4 @@ async function updateBinLocation(binId, newLat, newLng) {
     console.error("업데이트 실패:", err);
   }
 }
-
-
-
-
-
-
-
-
 
