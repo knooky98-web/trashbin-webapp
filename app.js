@@ -1395,7 +1395,8 @@ window.addEventListener("DOMContentLoaded", () => {
   if (rateBtn) {
     rateBtn.addEventListener("click", () => {
       closeSidePanel();
-      const reviewUrl = "https://google.com"; // 임시
+      const reviewUrl =
+      "https://play.google.com/store/apps/details?id=com.knooky.trashbin";
       window.open(reviewUrl, "_blank");
     });
   }
@@ -1790,4 +1791,5 @@ async function updateBinLocation(binId, newLat, newLng) {
     console.error("업데이트 실패:", err);
   }
 }
+
 
