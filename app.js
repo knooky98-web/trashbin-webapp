@@ -1390,16 +1390,23 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  /* ---------- 앱 평가하기 ---------- */
-  const rateBtn = document.getElementById("rate-app-btn");
-  if (rateBtn) {
-    rateBtn.addEventListener("click", () => {
-      closeSidePanel();
-      const reviewUrl =
-      "https://play.google.com/store/apps/details?id=com.knooky.trashbin";
-      window.open(reviewUrl, "_blank");
-    });
-  }
+ /* ---------- 앱 평가하기 ---------- */
+const rateBtn = document.getElementById("rate-app-btn");
+if (rateBtn) {
+  rateBtn.addEventListener("click", () => {
+    closeSidePanel();
+
+    const pkg = "com.knooky.trashbin";
+    const marketUrl = `market://details?id=${pkg}`;
+    const webUrl = `https://play.google.com/store/apps/details?id=${pkg}`;
+
+    window.location.href = marketUrl;
+
+    setTimeout(() => {
+      window.open(webUrl, "_blank");
+    }, 1000);
+  });
+}
 
   /* ---------- 문의 팝업 ---------- */
   const inquiryBackdrop = document.getElementById("inquiry-backdrop");
@@ -1791,5 +1798,6 @@ async function updateBinLocation(binId, newLat, newLng) {
     console.error("업데이트 실패:", err);
   }
 }
+
 
 
