@@ -2,7 +2,7 @@
   "name": "내 주변 쓰레기통 찾기",
   "short_name": "쓰레기통 찾기",
   "lang": "ko-KR",
-  "start_url": "/trashbin-webapp/index.html",
+  "start_url": "/trashbin-webapp/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
