@@ -1,5 +1,5 @@
 // service-worker.js
-const CACHE_NAME = "trashbin-app-v1";
+const CACHE_NAME = "trashbin-app-v3";
 
 const APP_SHELL = [
   "./",
@@ -55,3 +55,4 @@ self.addEventListener("fetch", (event) => {
     })
   );
 });
+
