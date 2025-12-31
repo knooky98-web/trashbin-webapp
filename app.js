@@ -1345,8 +1345,10 @@ window.addEventListener("DOMContentLoaded", () => {
         closeSidePanel();
       }
 
-      const url = window.location.href;
-      const isFile = window.location.protocol === "file:";
+      const pkg = "com.knooky.trashbin";
+const url = `https://play.google.com/store/apps/details?id=${pkg}`;
+const isFile = window.location.protocol === "file:";
+
 
       if (isFile) {
         window.prompt(
@@ -1798,6 +1800,7 @@ async function updateBinLocation(binId, newLat, newLng) {
     console.error("업데이트 실패:", err);
   }
 }
+
 
 
 
