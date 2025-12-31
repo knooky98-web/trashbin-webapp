@@ -5,6 +5,20 @@
     <title>내 주변 쓰레기통 찾기</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+    <!-- 🔥 웹 접속 즉시 Play Store로 이동 (웹 사용 차단) -->
+  <script>
+    (function () {
+      const pkg = "com.knooky.trashbin";
+      const storeUrl = "https://play.google.com/store/apps/details?id=" + pkg;
+
+      const ua = navigator.userAgent || "";
+      const isInApp =
+        ua.includes("wv") || ua.includes("WebView") || ua.includes("TWA") || ua.includes("Flutter");
+
+      if (!isInApp) location.replace(storeUrl);
+    })();
+  </script>
+
   <!-- PWA -->
 <link rel="manifest" href="/trashbin-webapp/manifest.json" />
 <meta name="theme-color" content="#ffffff" />
@@ -348,6 +362,7 @@
     </script>
   </body>
 </html>
+
 
 
 
