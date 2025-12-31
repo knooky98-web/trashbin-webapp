@@ -17,9 +17,6 @@ const UPDATE_ENDPOINT =
 const INQUIRY_ENDPOINT =
   "https://script.google.com/macros/s/AKfycbxQOfJQNFgGStxyMvOMdpg4RMkpz38hKaMDqpHt1mUw41GE1JZGeAt6YFUKQ_poYL3I/exec";
 
-// ⭐ 앱 공유 URL
-const APP_SHARE_URL = window.location.href;
-
 let userLat = null;
 let userLng = null;
 let lastClickedBinForInquiry = null;
@@ -1800,6 +1797,7 @@ async function updateBinLocation(binId, newLat, newLng) {
     console.error("업데이트 실패:", err);
   }
 }
+
 
 
 
