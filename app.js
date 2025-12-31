@@ -1399,11 +1399,12 @@ if (rateBtn) {
     const marketUrl = `market://details?id=${pkg}`;
     const webUrl = `https://play.google.com/store/apps/details?id=${pkg}`;
 
-    window.location.href = marketUrl;
+   window.location.href = marketUrl;
 
-    setTimeout(() => {
-      window.open(webUrl, "_blank");
-    }, 1000);
+setTimeout(() => {
+  window.location.href = webUrl;
+}, 800);
+
   });
 }
 
@@ -1797,6 +1798,7 @@ async function updateBinLocation(binId, newLat, newLng) {
     console.error("업데이트 실패:", err);
   }
 }
+
 
 
 
