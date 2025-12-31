@@ -1389,24 +1389,30 @@ const isFile = window.location.protocol === "file:";
     });
   }
 
- /* ---------- 앱 평가하기 ---------- */
+/* ---------- 앱 평가하기 ---------- */
 const rateBtn = document.getElementById("rate-app-btn");
 if (rateBtn) {
   rateBtn.addEventListener("click", () => {
     closeSidePanel();
 
     const pkg = "com.knooky.trashbin";
-    const marketUrl = `market://details?id=${pkg}`;
     const webUrl = `https://play.google.com/store/apps/details?id=${pkg}`;
 
-   window.location.href = marketUrl;
+    // 🔥 PWA Builder(TWA)에서 가장 안정적인 방식
+    const intentUrl =
+      `intent://details?id=${pkg}` +
+      `#Intent;scheme=market;package=com.android.vending;end`;
 
-setTimeout(() => {
-  window.location.href = webUrl;
-}, 800);
+    // 1️⃣ 먼저 Play Store 앱 시도
+    window.location.href = intentUrl;
 
+    // 2️⃣ 혹시 intent가 막히면 웹 스토어로 이동 (보험)
+    setTimeout(() => {
+      window.location.href = webUrl;
+    }, 800);
   });
 }
+
 
   /* ---------- 문의 팝업 ---------- */
   const inquiryBackdrop = document.getElementById("inquiry-backdrop");
@@ -1798,6 +1804,7 @@ async function updateBinLocation(binId, newLat, newLng) {
     console.error("업데이트 실패:", err);
   }
 }
+
 
 
 
