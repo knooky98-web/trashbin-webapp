@@ -1398,20 +1398,13 @@ if (rateBtn) {
     const pkg = "com.knooky.trashbin";
     const webUrl = `https://play.google.com/store/apps/details?id=${pkg}`;
 
-    // 🔥 PWA Builder(TWA)에서 가장 안정적인 방식
-    const intentUrl =
-      `intent://details?id=${pkg}` +
-      `#Intent;scheme=market;package=com.android.vending;end`;
-
-    // 1️⃣ 먼저 Play Store 앱 시도
-    window.location.href = intentUrl;
-
-    // 2️⃣ 혹시 intent가 막히면 웹 스토어로 이동 (보험)
-    setTimeout(() => {
-      window.location.href = webUrl;
-    }, 800);
+    // ✅ 웹앱(PWA/TWA)에서 가장 안정적: 웹 스토어로만 이동
+    // 새 탭이 막히면(팝업 차단) 현재 탭에서 이동
+    const opened = window.open(webUrl, "_blank", "noopener,noreferrer");
+    if (!opened) window.location.href = webUrl;
   });
 }
+
 
 
   /* ---------- 문의 팝업 ---------- */
@@ -1804,6 +1797,7 @@ async function updateBinLocation(binId, newLat, newLng) {
     console.error("업데이트 실패:", err);
   }
 }
+
 
 
 
