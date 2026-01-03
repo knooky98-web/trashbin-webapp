@@ -1393,17 +1393,18 @@ const isFile = window.location.protocol === "file:";
 const rateBtn = document.getElementById("rate-app-btn");
 if (rateBtn) {
   rateBtn.addEventListener("click", () => {
-    closeSidePanel();
+    if (typeof closeSidePanel === "function") closeSidePanel();
 
-    const pkg = "com.knooky.trashbin";
-    const webUrl = `https://play.google.com/store/apps/details?id=${pkg}`;
+    const url =
+      "https://play.google.com/store/apps/details" +
+      "?id=com.knooky.trashbin" +
+      "&hl=ko&gl=KR";
 
-    // ✅ 웹앱(PWA/TWA)에서 가장 안정적: 웹 스토어로만 이동
-    // 새 탭이 막히면(팝업 차단) 현재 탭에서 이동
-    const opened = window.open(webUrl, "_blank", "noopener,noreferrer");
-    if (!opened) window.location.href = webUrl;
+    const opened = window.open(url, "_blank", "noopener,noreferrer");
+    if (!opened) window.location.href = url;
   });
 }
+
 
 
 
